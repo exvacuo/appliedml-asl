@@ -7,3 +7,4 @@ venv/
 
 # Local datasets
 data/
+.venv/
