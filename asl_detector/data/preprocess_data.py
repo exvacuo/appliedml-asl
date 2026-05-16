@@ -16,3 +16,7 @@ def crop_blue_frame(images, pixels=3):
     return images[:, pixels:-pixels, pixels:-pixels, :]
 
 # TODO: add other preprocessing functions here
+
+
+
+#change by gillis
