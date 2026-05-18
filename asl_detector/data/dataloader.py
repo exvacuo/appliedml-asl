@@ -1,4 +1,6 @@
 from pathlib import Path
+from typing import Callable
+import numpy as np
 
 import tensorflow as tf
 
@@ -41,6 +43,8 @@ def create_dataset(
     )
 
 
-def load_data(data_dir: Path = DATA_DIR) -> tf.data.Dataset:
-    """Return the full TensorFlow dataset."""
-    return create_dataset(data_dir=data_dir)
+
+def load_data(data_dir: Path = DATA_DIR, validation_split: float | None = None, subset: str | None = None, shuffle: bool = True) -> tf.data.Dataset:
+    """Return full dataset"""
+    dataset = create_dataset(data_dir=data_dir, validation_split=validation_split, subset=subset, shuffle=shuffle)
+    return dataset

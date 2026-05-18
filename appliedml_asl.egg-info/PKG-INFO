@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: appliedml-asl
+Version: 0.1.0
+Requires-Python: >=3.12
+Requires-Dist: kaggle>=2.1.2
+Requires-Dist: opencv-python>=4.13.0.92
+Requires-Dist: pre-commit>=4.6.0
+Requires-Dist: scikit-learn>=1.8.0
+Requires-Dist: tensorflow>=2.21.0

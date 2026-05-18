@@ -1,6 +1,5 @@
 import tensorflow as tf
 
-
 def preprocess_knn(images, labels, size=64):
     """Preprocess a batch of images for the KNN baseline."""
     images = crop_blue_frame(images)
@@ -16,3 +15,9 @@ def crop_blue_frame(images, pixels=3):
     return images[:, pixels:-pixels, pixels:-pixels, :]
 
 # TODO: add other preprocessing functions here
+
+## Data Augmentation
+
+
+
+
