@@ -44,7 +44,8 @@ def create_dataset(
 
 def load_data(
     data_dir: Path = DATA_DIR,
-) -> tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
+    baseline: bool = False,
+) -> tuple[tf.data.Dataset, tf.data.Dataset | None, tf.data.Dataset]:
     """Return train (80%), val (10%), test (10%) datasets.
 
     Uses create_dataset's validation_split to carve out 20%, then splits
@@ -66,13 +67,18 @@ def load_data(
         shuffle=False,
     )
 
-    # Split into equal halves → 10% val, 10% test
-    n_remaining = remaining_ds.cardinality()
-    if n_remaining == tf.data.UNKNOWN_CARDINALITY:
-        n_remaining = sum(1 for _ in remaining_ds)
-    half = int(n_remaining) // 2
+    if baseline == False:
+        # Split into equal halves → 10% val, 10% test
+        n_remaining = remaining_ds.cardinality()
+        if n_remaining == tf.data.UNKNOWN_CARDINALITY:
+            n_remaining = sum(1 for _ in remaining_ds)
+        half = int(n_remaining) // 2
 
-    val_ds = remaining_ds.take(half).batch(BATCH_SIZE)
-    test_ds = remaining_ds.skip(half).batch(BATCH_SIZE)
+        val_ds = remaining_ds.take(half).batch(BATCH_SIZE)
+        test_ds = remaining_ds.skip(half).batch(BATCH_SIZE)
 
-    return train_ds, val_ds, test_ds
+        return train_ds, val_ds, test_ds
+
+    test_ds = remaining_ds
+
+    return train_ds, None, test_ds

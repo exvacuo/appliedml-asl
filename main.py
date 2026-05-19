@@ -1,6 +1,8 @@
 import tensorflow as tf
 
 from asl_detector.data.dataloader import load_data
+from asl_detector.models.knn import run_kfold, evaluate_on_test
+from asl_detector.features import extract_features
 from asl_detector.data.preprocess_data import preprocess_knn
 
 
@@ -12,24 +14,17 @@ class Pipeline:
         self.val = None
         self.test = None
 
-    def run_baseline(self):
-        """Load data, preprocess for KNN, and return train/val/test."""
-        self.train, self.val, self.test = load_data()
-        self.train = self.train.map(
-            lambda images, labels: preprocess_knn(images, labels, size=64)
-        )
-        return self.train, self.val, self.test
+    def train_baseline(self, extract_features):
+        """Load data, preprocess for KNN, and trains with Kfold cross validation"""
+        train, val, test = load_data(baseline=True)
+        X_train, y_train = extract_features(dataset=train)
+        train_results = run_kfold(X_train, y_train)
+        return train_results
+
+    def evaluate_knn(self):
+        ...
+
 
 if __name__ == "__main__":
     pipeline = Pipeline()
-    train, val, test = pipeline.run_baseline()
-
-    train_n = train.cardinality().numpy() * 32
-    val_n   = val.cardinality().numpy()   * 32
-    test_n  = test.cardinality().numpy()  * 32
-    total   = train_n + val_n + test_n
-
-    print(f"Train samples: {train_n} ({train_n/total:.1%})")
-    print(f"Val samples:   {val_n} ({val_n/total:.1%})")
-    print(f"Test samples:  {test_n} ({test_n/total:.1%})") 
-    
+    results = pipeline.train_baseline(extract_features=extract_features)

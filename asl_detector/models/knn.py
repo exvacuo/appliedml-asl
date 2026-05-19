@@ -13,7 +13,8 @@ KNN_K = 3
 KNN_METRIC = "euclidean"
 KNN_ALGORITHM = "ball_tree"
 
-def run_baseline(
+
+def run_kfold(
         X,
         y,
         n_folds: int = N_FOLDS,
@@ -23,12 +24,13 @@ def run_baseline(
 ) -> dict:
     skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=SEED)
     fold_accuracies, fold_f1s = [], []
-    
+
     for fold, (train_idx, val_idx) in enumerate(skf.split(X, y)):
         X_train, y_train = X[train_idx], y[train_idx]
         X_test, y_test = X[val_idx], y[val_idx]
 
-        knn = KNeighborsClassifier(n_neighbors=k, metric=metric, algorithm=algorithm,n_jobs=1)
+        knn = KNeighborsClassifier(
+            n_neighbors=k, metric=metric, algorithm=algorithm, n_jobs=1)
         knn.fit(X_train, y_train)
         y_pred = knn.predict(X_test)
 
@@ -45,7 +47,5 @@ def run_baseline(
         "mean_f1": np.mean(fold_f1s),
     }
 
-X,y = extract_features()
-results = run_baseline(X, y)
-print(f"Mean Accuracy: {results['mean_accuracy']:.4f}")
-print(f"Mean F1 Score: {results['mean_f1']:.4f}")
+def evaluate_on_test(test):
+    ...
