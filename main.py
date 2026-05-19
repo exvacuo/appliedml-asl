@@ -20,17 +20,16 @@ class Pipeline:
         )
         return self.train, self.val, self.test
 
-
 if __name__ == "__main__":
     pipeline = Pipeline()
     train, val, test = pipeline.run_baseline()
 
-    images, labels = next(iter(train))
-    print(f"Train batch: images {images.shape}, labels {labels.shape}")
+    train_n = train.cardinality().numpy() * 32
+    val_n   = val.cardinality().numpy()   * 32
+    test_n  = test.cardinality().numpy()  * 32
+    total   = train_n + val_n + test_n
 
-    # remove this, it's for a reference of the preprocessing
-    reference_image = tf.reshape(images[0], (64, 64, 1))
-    reference_image = tf.cast(reference_image * 255.0, tf.uint8)
-    encoded_image = tf.io.encode_png(reference_image)
-    tf.io.write_file("reference_image.png", encoded_image)  # for reference
-
+    print(f"Train samples: {train_n} ({train_n/total:.1%})")
+    print(f"Val samples:   {val_n} ({val_n/total:.1%})")
+    print(f"Test samples:  {test_n} ({test_n/total:.1%})") 
+    
