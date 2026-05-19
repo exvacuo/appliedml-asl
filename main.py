@@ -8,26 +8,28 @@ class Pipeline:
     """Class that encapsulates the pipeline for the ASL classification task."""
 
     def __init__(self) -> None:
-        self.data = None
+        self.train = None
+        self.val = None
+        self.test = None
 
     def run_baseline(self):
-        self.data = load_data()
-        self.data = self.data.map(
+        """Load data, preprocess for KNN, and return train/val/test."""
+        self.train, self.val, self.test = load_data()
+        self.train = self.train.map(
             lambda images, labels: preprocess_knn(images, labels, size=64)
         )
-        return self.data
-
+        return self.train, self.val, self.test
 
 if __name__ == "__main__":
     pipeline = Pipeline()
-    dataset = pipeline.run_baseline()
+    train, val, test = pipeline.run_baseline()
 
-    images, labels = next(iter(dataset))
+    train_n = train.cardinality().numpy() * 32
+    val_n   = val.cardinality().numpy()   * 32
+    test_n  = test.cardinality().numpy()  * 32
+    total   = train_n + val_n + test_n
 
-    print(images.shape)
-
-    # remove this, it's for a reference of the preprocessing
-    reference_image = tf.reshape(images[0], (64, 64, 1))
-    reference_image = tf.cast(reference_image * 255.0, tf.uint8)
-    encoded_image = tf.io.encode_png(reference_image)
-    tf.io.write_file("reference_image.png", encoded_image) # for reference
+    print(f"Train samples: {train_n} ({train_n/total:.1%})")
+    print(f"Val samples:   {val_n} ({val_n/total:.1%})")
+    print(f"Test samples:  {test_n} ({test_n/total:.1%})") 
+    
