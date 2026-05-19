@@ -2,6 +2,8 @@ import tensorflow as tf
 
 class ASLMobilenetv2():
     def __init__(self, num_classes: int = 29, dropout_rate: float = 0.2):
+        self.num_classes = num_classes
+        self.dropout_rate = dropout_rate
         ## Base model
         self.base_model = tf.keras.applications.MobileNetV2(
             input_shape=(224, 224, 3),
@@ -9,6 +11,7 @@ class ASLMobilenetv2():
             weights='imagenet',            
         )
         self.base_model.trainable = False
+        self.build_classifier(num_classes)
     def build_classifier(self, num_classes: int = 29):
         ## TODO build the classifier head
         ...
