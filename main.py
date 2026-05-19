@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 from asl_detector.data.dataloader import load_data
-from asl_detector.models.knn import run_kfold, evaluate_on_test
+from asl_detector.models.knn import run_kfold, train_final_model, evaluate_on_test
 from asl_detector.features import extract_features
 from asl_detector.data.preprocess_data import preprocess_knn
 
@@ -14,15 +14,15 @@ class Pipeline:
         self.val = None
         self.test = None
 
-    def train_baseline(self, extract_features):
+    def run_baseline(self, extract_features):
         """Load data, preprocess for KNN, and trains with Kfold cross validation"""
         train, val, test = load_data(baseline=True)
         X_train, y_train = extract_features(dataset=train)
-        train_results = run_kfold(X_train, y_train)
+        K_fold = run_kfold(X_train, y_train)
+        
         return train_results
 
-    def evaluate_knn(self):
-        ...
+    
 
 
 if __name__ == "__main__":
