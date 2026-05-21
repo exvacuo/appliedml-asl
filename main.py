@@ -3,7 +3,7 @@ import tensorflow as tf
 from asl_detector.data.dataloader import load_data
 from asl_detector.models.knn import run_kfold, train_final_model, evaluate_on_test
 from asl_detector.features import extract_features
-from asl_detector.data.preprocess_data import preprocess_knn
+from asl_detector.data.preprocess_data import preprocess_knn, find_near_duplicates
 
 
 class Pipeline:
@@ -26,5 +26,8 @@ class Pipeline:
 
 
 if __name__ == "__main__":
-    pipeline = Pipeline()
-    results = pipeline.train_baseline(extract_features=extract_features)
+    
+    image_dir = "data/raw/test/asl_alphabet_test"
+    duplicates = find_near_duplicates(image_dir)
+
+    print("Near-duplicate images:", len(duplicates))

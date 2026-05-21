@@ -1,5 +1,23 @@
-import tensorflow as tf
+from asl_detector.data.dataloader import DATA_DIR
+from imagededup.methods import PHash
+import os
+from pathlib import Path
 
+
+# ── Find near duplicates ──────────────────────────────────────────────
+
+print("hello world")
+"""
+phasher = PHash()
+image_dir = "data/raw/test/asl_alphabet_test"
+print("Encoding images...")
+encodings = phasher.encode_images(image_dir)
+print(f"Encoded {len(encodings)} images. Finding duplicates...")
+duplicates = phasher.find_duplicates(encoding_map=encodings)
+
+
+print("Near-duplicate images:", len(duplicates))
+"""
 
 # ── KNN baseline preprocessing ──────────────────────────────────────────────
 
