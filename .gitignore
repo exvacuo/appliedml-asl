@@ -6,4 +6,5 @@ venv/
 .env
 
 # Local datasets
-data/
+/data/
+.venv/

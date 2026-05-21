@@ -1,0 +1,19 @@
+[project]
+name = "appliedml-asl"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "kaggle>=2.1.2",
+    "opencv-python>=4.13.0.92",
+    "pre-commit>=4.6.0",
+    "scikit-learn>=1.8.0",
+    "tensorflow>=2.21.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
+
+[tool.setuptools.packages.find]
+include = ["asl_detector*"]
