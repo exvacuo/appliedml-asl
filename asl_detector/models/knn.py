@@ -1,5 +1,5 @@
 from asl_detector.data.dataloader import load_data, SEED, BATCH_SIZE
-from asl_detector.data.preprocess_data import preprocess_knn
+from asl_detector.data.preprocess_data import create_augmentation_layer
 from asl_detector.features.extract_features import extract_features
 from sklearn.model_selection import StratifiedKFold
 from sklearn.decomposition import PCA
@@ -82,9 +82,18 @@ def evaluate_on_test(model: KNeighborsClassifier, X_test, y_test) -> dict:
 train, val, test = load_data(baseline=True)
 test = test.batch(BATCH_SIZE)
 
+print("Augmenting training data...")
+## Augmentation
+augmenter = create_augmentation_layer()
+def augment_dataset(images, labels):
+    return augmenter(images), labels
+
+train_combined = train.concatenate(train.map(augment_dataset))
+
+
 ## Extract features
 print("Extracting features for KNN...")
-X_train, y_train = extract_features(dataset=train)
+X_train, y_train = extract_features(dataset=train_combined)
 X_test, y_test = extract_features(dataset=test)
 
 ## Run Kfold

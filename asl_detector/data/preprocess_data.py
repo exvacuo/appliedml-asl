@@ -22,6 +22,8 @@ def crop_blue_frame(images, pixels=3):
     return images[:, pixels:-pixels, pixels:-pixels, :]
 
 
+
+
 # ── MobileNetV2 preprocessing ───────────────────────────────────────────────
 
 MOBILENET_INPUT_SIZE = (224, 224)
