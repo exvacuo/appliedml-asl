@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 
-DATA_DIR = Path("data/raw/train/asl_alphabet_train")
+DATA_DIR = Path("data/deduplicated/train")
 IMAGE_SIZE = (224, 224)
 BATCH_SIZE = 32
 SEED = 42
@@ -46,19 +46,16 @@ def load_data(
     data_dir: Path = DATA_DIR,
     baseline: bool = False,
 ) -> tuple[tf.data.Dataset, tf.data.Dataset | None, tf.data.Dataset]:
-    """Return train (80%), val (10%), test (10%) datasets.
-
-    Uses create_dataset's validation_split to carve out 20%, then splits
-    that remainder in half for val and test.  The remaining 20% is loaded
-    unbatched so we can split by sample count, then re-batched.
+    """Return train (80%), val (10%), test (10%) datasets or 
+    80/20 train/test split for KNN baseline.
     """
+
     train_ds = create_dataset(
         data_dir=data_dir,
         validation_split=0.2,
         subset="training",
     )
 
-    # Load remaining 20% unbatched so we can split cleanly
     remaining_ds = create_dataset(
         data_dir=data_dir,
         validation_split=0.2,
@@ -68,7 +65,6 @@ def load_data(
     )
 
     if baseline == False:
-        # Split into equal halves → 10% val, 10% test
         n_remaining = remaining_ds.cardinality()
         if n_remaining == tf.data.UNKNOWN_CARDINALITY:
             n_remaining = sum(1 for _ in remaining_ds)
