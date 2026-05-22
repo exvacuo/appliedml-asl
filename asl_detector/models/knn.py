@@ -5,7 +5,6 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.decomposition import PCA
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, f1_score
-import cv2
 import numpy as np
 import tensorflow as tf
 
@@ -14,6 +13,7 @@ KNN_K = 3
 KNN_METRIC = "euclidean"
 KNN_ALGORITHM = "brute"
 PCA_COMPONENTS = 50
+AUGMENTED_COPIES_PER_IMAGE = 5
 
 
 
@@ -88,37 +88,26 @@ print("Augmenting training data...")
 ## Augmentation
 augmenter = create_augmentation_layer()
 
-# Preview one unmodified image, the blue-frame-cropped image, and several augmented versions with OpenCV.
-for images, labels in train.take(1):
-    unmodified_image = images[0]
-    cropped_images = crop_blue_frame(images)
-    image = cropped_images[0]
-    label = labels[0]
-
-    unmodified_display = unmodified_image.numpy().astype("uint8")
-    unmodified_display = cv2.cvtColor(unmodified_display, cv2.COLOR_RGB2BGR)
-    cv2.imshow(f"Unmodified - Label: {label.numpy()}", unmodified_display)
-
-    cropped_display = image.numpy().astype("uint8")
-    cropped_display = cv2.cvtColor(cropped_display, cv2.COLOR_RGB2BGR)
-    cv2.imshow(f"Blue Frame Removed - Label: {label.numpy()}", cropped_display)
-
-    for i in range(4):
-        augmented_image = augmenter(tf.expand_dims(image, axis=0), training=True)[0]
-        augmented_image = np.clip(augmented_image.numpy(), 0, 255).astype("uint8")
-        augmented_image = cv2.cvtColor(augmented_image, cv2.COLOR_RGB2BGR)
-        cv2.imshow(f"Blue Frame Removed + Augmented {i + 1}", augmented_image)
-
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    break
 
 def augment_dataset(images, labels):
     images = crop_blue_frame(images)
-    return augmenter(images), labels
+    augmented_batches = [
+        augmenter(images, training=True)
+        for _ in range(AUGMENTED_COPIES_PER_IMAGE)
+    ]
+    augmented_images = tf.concat(augmented_batches, axis=0)
+    augmented_labels = tf.repeat(labels, repeats=AUGMENTED_COPIES_PER_IMAGE, axis=0)
+    return augmented_images, augmented_labels
 
 train_combined = train.concatenate(train.map(augment_dataset))
 
+original_train_image_count = train.reduce(
+    np.int64(0),
+    lambda count, batch: count + tf.cast(tf.shape(batch[0])[0], tf.int64),
+).numpy()
+train_image_count = original_train_image_count * (1 + AUGMENTED_COPIES_PER_IMAGE)
+print(f"Original training images: {original_train_image_count}")
+print(f"Training images after augmentation: {train_image_count}")
 
 ## Extract features
 print("Extracting features for KNN...")

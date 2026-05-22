@@ -1,5 +1,7 @@
 import tensorflow as tf
 
+AUGMENTATION_SEED = 42
+
 
 # ── KNN baseline preprocessing ──────────────────────────────────────────────
 
@@ -24,6 +26,7 @@ def crop_blue_frame(images, pixels=3):
 
 # ── Extra augmentation functions ────────────────────────────────────────────
 
+
 def random_hue(images):
     """Randomly shift image hue."""
     return tf.image.random_hue(images, max_delta=0.25)
@@ -37,6 +40,7 @@ def random_invert(images):
 
 
 # ── MobileNetV2 preprocessing ───────────────────────────────────────────────
+
 
 MOBILENET_INPUT_SIZE = (224, 224)
 
@@ -57,23 +61,39 @@ def preprocess_mobilenet(images, labels):
 
 
 def create_augmentation_layer():
-    """Return a Sequential augmentation layer with stronger transforms.
+    """Return a reproducible Sequential augmentation layer.
 
     Augmentations:
-      - Random rotation  ±25°
-      - Random translation  20% horizontal/vertical
-      - Random zoom  25%
-      - Random brightness  ±30%
-      - Random contrast  40%
+      - Random rotation  ±18°
+      - Random translation  10% horizontal/vertical
+      - Random zoom  10%
+      - Random brightness  ±20%
+      - Random contrast  20%
       - Random hue shift
       - Random color inversion
     """
-    return tf.keras.Sequential([
-        tf.keras.layers.RandomRotation(25 / 360),      # ±25°
-        tf.keras.layers.RandomTranslation(0.2, 0.2),   # 20% shift
-        tf.keras.layers.RandomZoom(0.25),              # 25% zoom
-        tf.keras.layers.RandomBrightness(0.3),         # ±30% brightness
-        tf.keras.layers.RandomContrast(0.4),           # stronger contrast
-        tf.keras.layers.Lambda(random_hue),            # stronger color shift
-        tf.keras.layers.Lambda(random_invert),         # invert about half the images
-    ])
+    tf.keras.utils.set_random_seed(AUGMENTATION_SEED)
+
+    return tf.keras.Sequential(
+        [
+            tf.keras.layers.RandomRotation(0.05, seed=AUGMENTATION_SEED),
+            tf.keras.layers.RandomTranslation(
+                0.1,
+                0.1,
+                fill_mode="constant",
+                fill_value=0.0,
+                seed=AUGMENTATION_SEED + 1,
+            ),
+            tf.keras.layers.RandomZoom(
+                0.1,
+                fill_mode="constant",
+                fill_value=0.0,
+                seed=AUGMENTATION_SEED + 2,
+            ),
+            tf.keras.layers.RandomBrightness(0.2, seed=AUGMENTATION_SEED + 3),
+            tf.keras.layers.RandomContrast(0.2, seed=AUGMENTATION_SEED + 4),
+            tf.keras.layers.Lambda(random_hue),
+            tf.keras.layers.Lambda(random_invert),
+        ],
+        name="augmentation",
+    )
