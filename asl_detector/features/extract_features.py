@@ -1,7 +1,7 @@
-from asl_detector.data.dataloader import create_dataset
-from asl_detector.data.preprocess_data import preprocess_knn
 import tensorflow as tf
 import numpy as np
+from asl_detector.data.preprocess_data import preprocess_knn
+
 
 PREPROCESS_SIZE = 32
 

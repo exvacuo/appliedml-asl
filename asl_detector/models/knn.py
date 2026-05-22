@@ -1,3 +1,5 @@
+import numpy as np
+import tensorflow as tf
 from asl_detector.data.dataloader import load_data, SEED, BATCH_SIZE
 from asl_detector.data.preprocess_data import create_augmentation_layer, crop_blue_frame
 from asl_detector.features.extract_features import extract_features
@@ -5,8 +7,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.decomposition import PCA
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, f1_score
-import numpy as np
-import tensorflow as tf
+
 
 N_FOLDS = 3
 KNN_K = 3
