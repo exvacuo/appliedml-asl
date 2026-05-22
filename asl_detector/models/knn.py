@@ -13,7 +13,7 @@ KNN_K = 3
 KNN_METRIC = "euclidean"
 KNN_ALGORITHM = "brute"
 PCA_COMPONENTS = 50
-AUGMENTED_COPIES_PER_IMAGE = 5
+AUGMENTED_COPIES_PER_IMAGE = 2
 
 
 
@@ -99,29 +99,34 @@ def augment_dataset(images, labels):
     augmented_labels = tf.repeat(labels, repeats=AUGMENTED_COPIES_PER_IMAGE, axis=0)
     return augmented_images, augmented_labels
 
-train_combined = train.concatenate(train.map(augment_dataset))
 
-original_train_image_count = train.reduce(
-    np.int64(0),
-    lambda count, batch: count + tf.cast(tf.shape(batch[0])[0], tf.int64),
-).numpy()
-train_image_count = original_train_image_count * (1 + AUGMENTED_COPIES_PER_IMAGE)
-print(f"Original training images: {original_train_image_count}")
-print(f"Training images after augmentation: {train_image_count}")
+def main():
+    train_combined = train.concatenate(train.map(augment_dataset))
 
-## Extract features
-print("Extracting features for KNN...")
-X_train, y_train = extract_features(dataset=train_combined)
-X_test, y_test = extract_features(dataset=test)
+    original_train_image_count = train.reduce(
+        np.int64(0),
+        lambda count, batch: count + tf.cast(tf.shape(batch[0])[0], tf.int64),
+    ).numpy()
+    train_image_count = original_train_image_count * (1 + AUGMENTED_COPIES_PER_IMAGE)
+    print(f"Original training images: {original_train_image_count}")
+    print(f"Training images after augmentation: {train_image_count}")
 
-## Run Kfold
-print("Running KNN with K-fold cross validation...")
-K_fold = run_kfold(X_train, y_train)
-print("KNN K-fold results:", K_fold)
+    ## Extract features
+    print("Extracting features for KNN...")
+    X_train, y_train = extract_features(dataset=train_combined)
+    X_test, y_test = extract_features(dataset=test)
 
-## Train final model
-print("Training final KNN model on full training set...")
-final_model, pca = train_final_model(X_train, y_train)
-X_test = pca.transform(X_test)
-test_results = evaluate_on_test(final_model, X_test, y_test)
-print("KNN test results:", test_results)
+    ## Run Kfold
+    print("Running KNN with K-fold cross validation...")
+    K_fold = run_kfold(X_train, y_train)
+    print("KNN K-fold results:", K_fold)
+
+    ## Train final model
+    print("Training final KNN model on full training set...")
+    final_model, pca = train_final_model(X_train, y_train)
+    X_test = pca.transform(X_test)
+    test_results = evaluate_on_test(final_model, X_test, y_test)
+    print("KNN test results:", test_results)
+
+if __name__ == "__main__":
+    main()

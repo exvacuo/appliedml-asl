@@ -1,7 +1,8 @@
-from imagededup.methods import PHash
 from collections import defaultdict
 import shutil
 from pathlib import Path
+from imagededup.methods import PHash
+
 CLASSES = ["A", "B", "C", "D", "del", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "nothing", "O", "P", "Q", "R", "S", "space", "T", "U", "V", "W", "X", "Y", "Z"]
 MAX_REMOVALS_PER_CLASS = 1800
 DATA_RAW_DIR = Path("data/raw/train/asl_alphabet_train")
@@ -66,11 +67,16 @@ def copy_deduplicated_dataset(to_remove: set[str], output_dir: Path):
 
 
 
-total_to_remove = find_near_duplicates(PHash(), DATA_RAW_DIR)
-print(len(total_to_remove))
+def main():
+    total_to_remove = find_near_duplicates(PHash(), DATA_RAW_DIR)
+    print(len(total_to_remove))
 
-grouped = group_by_class(total_to_remove)
+    grouped = group_by_class(total_to_remove)
 
-to_remove_capped = cap_removals(grouped, MAX_REMOVALS_PER_CLASS)
+    to_remove_capped = cap_removals(grouped, MAX_REMOVALS_PER_CLASS)
 
-copy_deduplicated_dataset(to_remove_capped, OUTPUT_DIR)
+    copy_deduplicated_dataset(to_remove_capped, OUTPUT_DIR)
+
+
+if __name__ == "__main__":
+    main()
