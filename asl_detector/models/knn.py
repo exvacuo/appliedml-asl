@@ -1,10 +1,11 @@
 from asl_detector.data.dataloader import load_data, SEED, BATCH_SIZE
-from asl_detector.data.preprocess_data import create_augmentation_layer
+from asl_detector.data.preprocess_data import create_augmentation_layer, crop_blue_frame
 from asl_detector.features.extract_features import extract_features
 from sklearn.model_selection import StratifiedKFold
 from sklearn.decomposition import PCA
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, f1_score
+import cv2
 import numpy as np
 import tensorflow as tf
 
@@ -82,10 +83,38 @@ def evaluate_on_test(model: KNeighborsClassifier, X_test, y_test) -> dict:
 train, val, test = load_data(baseline=True)
 test = test.batch(BATCH_SIZE)
 
+
 print("Augmenting training data...")
 ## Augmentation
 augmenter = create_augmentation_layer()
+
+# Preview one unmodified image, the blue-frame-cropped image, and several augmented versions with OpenCV.
+for images, labels in train.take(1):
+    unmodified_image = images[0]
+    cropped_images = crop_blue_frame(images)
+    image = cropped_images[0]
+    label = labels[0]
+
+    unmodified_display = unmodified_image.numpy().astype("uint8")
+    unmodified_display = cv2.cvtColor(unmodified_display, cv2.COLOR_RGB2BGR)
+    cv2.imshow(f"Unmodified - Label: {label.numpy()}", unmodified_display)
+
+    cropped_display = image.numpy().astype("uint8")
+    cropped_display = cv2.cvtColor(cropped_display, cv2.COLOR_RGB2BGR)
+    cv2.imshow(f"Blue Frame Removed - Label: {label.numpy()}", cropped_display)
+
+    for i in range(4):
+        augmented_image = augmenter(tf.expand_dims(image, axis=0), training=True)[0]
+        augmented_image = np.clip(augmented_image.numpy(), 0, 255).astype("uint8")
+        augmented_image = cv2.cvtColor(augmented_image, cv2.COLOR_RGB2BGR)
+        cv2.imshow(f"Blue Frame Removed + Augmented {i + 1}", augmented_image)
+
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    break
+
 def augment_dataset(images, labels):
+    images = crop_blue_frame(images)
     return augmenter(images), labels
 
 train_combined = train.concatenate(train.map(augment_dataset))
