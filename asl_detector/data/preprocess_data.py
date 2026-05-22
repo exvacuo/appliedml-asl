@@ -54,7 +54,6 @@ def preprocess_mobilenet(images, labels):
     Resizes to 224×224 and normalises pixel values from [0, 255] to [-1, 1]
     using MobileNetV2's built-in preprocess_input.
     """
-    images = crop_blue_frame(images)
     images = tf.image.resize(images, MOBILENET_INPUT_SIZE)
     images = tf.keras.applications.mobilenet_v2.preprocess_input(images)
     return images, labels
