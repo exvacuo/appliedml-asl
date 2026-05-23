@@ -8,6 +8,3 @@ venv/
 # Local datasets
 /data/
 .venv/
-
-# Local model artifacts
-/models/
