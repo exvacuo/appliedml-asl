@@ -24,7 +24,7 @@ def create_dataset(
     if not data_dir.exists():
         raise FileNotFoundError(
             f"Could not find the data at {data_dir}. "
-            "Try downloading with python scripts/download_data.py"
+            "Try downloading with uv run scripts/craft_dataset.py"
         )
 
     return tf.keras.utils.image_dataset_from_directory(
@@ -64,7 +64,6 @@ def load_data(
         data_dir=data_dir,
         validation_split=0.2,
         subset="validation",
-        shuffle=False,
     )
 
     test_ds = create_dataset(data_dir=test_data_dir, shuffle=False)
