@@ -1,11 +1,10 @@
 from pathlib import Path
-from typing import Callable
-import numpy as np
 
 import tensorflow as tf
 
 
-DATA_DIR = Path("data/deduplicated/train")
+DATA_DIR = Path("data/curated/train")
+TEST_DATA_DIR = Path("data/curated/test")
 IMAGE_SIZE = (224, 224)
 BATCH_SIZE = 32
 SEED = 42
@@ -44,11 +43,16 @@ def create_dataset(
 
 def load_data(
     data_dir: Path = DATA_DIR,
+    test_data_dir: Path = TEST_DATA_DIR,
     baseline: bool = False,
 ) -> tuple[tf.data.Dataset, tf.data.Dataset | None, tf.data.Dataset]:
-    """Return train (80%), val (10%), test (10%) datasets or 
-    80/20 train/test split for KNN baseline.
-    """
+    """Return datasets from the curated train/test split."""
+
+    if baseline:
+        train_ds = create_dataset(data_dir=data_dir)
+        test_ds = create_dataset(data_dir=test_data_dir, shuffle=False)
+
+        return train_ds, None, test_ds
 
     train_ds = create_dataset(
         data_dir=data_dir,
@@ -60,21 +64,9 @@ def load_data(
         data_dir=data_dir,
         validation_split=0.2,
         subset="validation",
-        batch_size=None,
         shuffle=False,
     )
 
-    if baseline == False:
-        n_remaining = remaining_ds.cardinality()
-        if n_remaining == tf.data.UNKNOWN_CARDINALITY:
-            n_remaining = sum(1 for _ in remaining_ds)
-        half = int(n_remaining) // 2
+    test_ds = create_dataset(data_dir=test_data_dir, shuffle=False)
 
-        val_ds = remaining_ds.take(half).batch(BATCH_SIZE)
-        test_ds = remaining_ds.skip(half).batch(BATCH_SIZE)
-
-        return train_ds, val_ds, test_ds
-
-    test_ds = remaining_ds
-
-    return train_ds, None, test_ds
+    return train_ds, remaining_ds, test_ds
