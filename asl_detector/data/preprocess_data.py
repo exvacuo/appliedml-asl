@@ -12,19 +12,13 @@ AUGMENTATION_SEED = 42
 def preprocess_knn(images, labels, size=64):
     """Preprocess a batch of images for the KNN baseline.
 
-    Pipeline: crop border → grayscale → resize → normalize [0,1] → flatten.
+    Pipeline: grayscale → resize → normalize [0,1] → flatten.
     """
-    images = crop_blue_frame(images)
     images = tf.image.rgb_to_grayscale(images)
     images = tf.image.resize(images, (size, size))
     images = images / 255.0
     images = tf.reshape(images, (tf.shape(images)[0], size * size))
     return images, labels
-
-
-def crop_blue_frame(images, pixels=3):
-    """Crop the border from a batch of images."""
-    return images[:, pixels:-pixels, pixels:-pixels, :]
 
 
 # ── Extra augmentation functions ────────────────────────────────────────────
@@ -54,7 +48,6 @@ def preprocess_mobilenet(images, labels):
     Resizes to 224×224 and normalises pixel values from [0, 255] to [-1, 1]
     using MobileNetV2's built-in preprocess_input.
     """
-    images = crop_blue_frame(images)
     images = tf.image.resize(images, MOBILENET_INPUT_SIZE)
     images = tf.keras.applications.mobilenet_v2.preprocess_input(images)
     return images, labels
