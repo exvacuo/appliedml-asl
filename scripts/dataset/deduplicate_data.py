@@ -3,6 +3,7 @@ import shutil
 from pathlib import Path
 
 from imagededup.methods import PHash
+from matplotlib import image
 
 
 CLASSES = [
@@ -60,8 +61,8 @@ def find_near_duplicates(phasher: PHash, image_dir: Path) -> set[str]:
 
         seen = set()
         to_remove = set()
-        for image, matches in duplicates.items():
-            for match in matches:
+        for image in sorted(duplicates.keys()):
+            for match in sorted(duplicates[image]):
                 pair = frozenset([image, match])
                 if pair not in seen:
                     seen.add(pair)
@@ -85,7 +86,7 @@ def copy_downsampled_dataset(to_remove: set[str], output_dir: Path) -> None:
         if not src_class_dir.exists():
             continue
 
-        images = list(src_class_dir.glob("*.jpg"))
+        images = sorted(src_class_dir.glob("*.jpg"))
         candidate_images = [img for img in images if img.name not in to_remove]
 
         class_to_images[sign] = candidate_images
