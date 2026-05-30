@@ -74,7 +74,7 @@ def objective_phase2(trial, dropout_rate, batch_size):
     _, val_accuracy = model.model.evaluate(val_preprocessed)
     return val_accuracy
 
-def main():
+def find_hyperparameters():
     "" "Run Phase 1 hyperparameter tuning."""
     study_phase_1 = optuna.create_study(direction="maximize",
                                 sampler=optuna.samplers.GridSampler(PHASE1_SEARCH_SPACE),
@@ -97,6 +97,4 @@ def main():
     hyperparams_phase_2 = study_phase_2.best_params
     print("Best hyperparameters from Phase 2:", hyperparams_phase_2)
 
-
-if __name__ == "__main__":
-    main()
+    return hyperparams_phase_1, hyperparams_phase_2
