@@ -11,10 +11,15 @@ DATA_CROPPED_DIR = Path("data/cropped")
 DATA_CURATED_TRAIN_DIR = Path("data/curated/train")
 DATA_CURATED_TEST_DIR = Path("data/curated/test")
 
+# Model Paths
+MODEL_DIR = Path("models")
+MODEL_WEIGHTS_PATH = MODEL_DIR / "mobilenetv2.weights.h5"
+
 # Dataset Information
 CLASSES = [
-    "A", "B", "C", "D", "del", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N",
-    "nothing", "O", "P", "Q", "R", "S", "space", "T", "U", "V", "W", "X", "Y", "Z"
+    "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N",
+    "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+    "del", "nothing", "space"
 ]
 
 # Data Processing Params
