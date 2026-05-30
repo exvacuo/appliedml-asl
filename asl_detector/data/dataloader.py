@@ -2,16 +2,11 @@ from pathlib import Path
 
 import tensorflow as tf
 
-
-DATA_DIR = Path("data/curated/train")
-TEST_DATA_DIR = Path("data/curated/test")
-IMAGE_SIZE = (224, 224)
-BATCH_SIZE = 32
-SEED = 42
+from asl_detector.constants import BATCH_SIZE, DATA_CURATED_TEST_DIR, DATA_CURATED_TRAIN_DIR, IMAGE_SIZE, SEED
 
 
 def create_dataset(
-    data_dir: Path = DATA_DIR,
+    data_dir: Path = DATA_CURATED_TRAIN_DIR,
     image_size: tuple[int, int] = IMAGE_SIZE,
     batch_size: int = BATCH_SIZE,
     validation_split: float | None = None,
@@ -42,8 +37,8 @@ def create_dataset(
 
 
 def load_data(
-    data_dir: Path = DATA_DIR,
-    test_data_dir: Path = TEST_DATA_DIR,
+    data_dir: Path = DATA_CURATED_TRAIN_DIR,
+    test_data_dir: Path = DATA_CURATED_TEST_DIR,
     baseline: bool = False,
 ) -> tuple[tf.data.Dataset, tf.data.Dataset | None, tf.data.Dataset]:
     """Return datasets from the curated train/test split."""
