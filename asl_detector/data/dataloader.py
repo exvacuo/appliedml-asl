@@ -45,12 +45,13 @@ def load_data(
     data_dir: Path = DATA_DIR,
     test_data_dir: Path = TEST_DATA_DIR,
     baseline: bool = False,
+    batch_size: int = BATCH_SIZE,
 ) -> tuple[tf.data.Dataset, tf.data.Dataset | None, tf.data.Dataset]:
     """Return datasets from the curated train/test split."""
 
     if baseline:
-        train_ds = create_dataset(data_dir=data_dir)
-        test_ds = create_dataset(data_dir=test_data_dir, shuffle=False)
+        train_ds = create_dataset(data_dir=data_dir, batch_size=batch_size)
+        test_ds = create_dataset(data_dir=test_data_dir, shuffle=False, batch_size=batch_size)
 
         return train_ds, None, test_ds
 
@@ -58,14 +59,16 @@ def load_data(
         data_dir=data_dir,
         validation_split=0.2,
         subset="training",
+        batch_size=batch_size,
     )
 
     remaining_ds = create_dataset(
         data_dir=data_dir,
         validation_split=0.2,
         subset="validation",
+        batch_size=batch_size,
     )
 
-    test_ds = create_dataset(data_dir=test_data_dir, shuffle=False)
+    test_ds = create_dataset(data_dir=test_data_dir, shuffle=False, batch_size=batch_size)
 
     return train_ds, remaining_ds, test_ds
