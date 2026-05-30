@@ -98,3 +98,6 @@ def find_hyperparameters():
     print("Best hyperparameters from Phase 2:", hyperparams_phase_2)
 
     return hyperparams_phase_1, hyperparams_phase_2
+
+if __name__ == "__main__":
+    hyperparams_phase_1, hyperparams_phase_2 = find_hyperparameters()
