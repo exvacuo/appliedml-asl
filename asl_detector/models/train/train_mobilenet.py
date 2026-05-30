@@ -5,10 +5,9 @@ from asl_detector.data.dataloader import load_data
 from asl_detector.data.preprocess_data import preprocess_mobilenet, create_augmentation_layer
 from asl_detector.models.mobilenetv2 import ASLMobilenetv2
 
+from asl_detector.constants import MODEL_DIR, MODEL_WEIGHTS_PATH
 # branch created
 AUGMENTED_COPIES_PER_IMAGE = 3
-MODEL_DIR = Path("models")
-WEIGHTS_PATH = MODEL_DIR / "mobilenetv2.weights.h5"
 
 train, val, test = load_data(baseline=False)
 
@@ -35,8 +34,8 @@ def main():
     model.model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     model.model.fit(train_combined, validation_data=val_preprocessed, epochs=10)
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
-    model.model.save_weights(WEIGHTS_PATH)
-    print(f"Saved model weights to {WEIGHTS_PATH}")
+    model.model.save_weights(MODEL_WEIGHTS_PATH)
+    print(f"Saved model weights to {MODEL_WEIGHTS_PATH}")
     test_loss, test_acc = model.model.evaluate(test_preprocessed)
     print(f"Test accuracy: {test_acc:.4f}, Test loss: {test_loss:.4f}")
 
