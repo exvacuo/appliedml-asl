@@ -2,70 +2,33 @@ import random
 import shutil
 from pathlib import Path
 
-
-CLASSES = [
-    "A",
-    "B",
-    "C",
-    "D",
-    "del",
-    "E",
-    "F",
-    "G",
-    "H",
-    "I",
-    "J",
-    "K",
-    "L",
-    "M",
-    "N",
-    "nothing",
-    "O",
-    "P",
-    "Q",
-    "R",
-    "S",
-    "space",
-    "T",
-    "U",
-    "V",
-    "W",
-    "X",
-    "Y",
-    "Z",
-]
-SEED = 42
-TEST_RATIO = 0.2
-
-SRC_DIR = Path("data/cropped")
-TRAIN_DIR = Path("data/curated/train")
-TEST_DIR = Path("data/curated/test")
+from asl_detector.constants import CLASSES, DATA_CROPPED_DIR, DATA_CURATED_TEST_DIR, DATA_CURATED_TRAIN_DIR, SEED, TEST_RATIO
 
 
 def split_dataset() -> None:
     print(
-        f"Splitting {SRC_DIR} into train/test "
+        f"Splitting {DATA_CROPPED_DIR} into train/test "
         f"({1 - TEST_RATIO:.0%}/{TEST_RATIO:.0%})..."
     )
 
-    if not SRC_DIR.exists():
-        print(f"Error: source directory {SRC_DIR} not found.")
+    if not DATA_CROPPED_DIR.exists():
+        print(f"Error: source directory {DATA_CROPPED_DIR} not found.")
         print("Run the cropping step first: python scripts/dataset/crop_data.py")
         return
 
-    if TRAIN_DIR.exists():
-        print(f"Cleaning existing curated train directory at {TRAIN_DIR}...")
-        shutil.rmtree(TRAIN_DIR)
-    if TEST_DIR.exists():
-        print(f"Cleaning existing curated test directory at {TEST_DIR}...")
-        shutil.rmtree(TEST_DIR)
+    if DATA_CURATED_TRAIN_DIR.exists():
+        print(f"Cleaning existing curated train directory at {DATA_CURATED_TRAIN_DIR}...")
+        shutil.rmtree(DATA_CURATED_TRAIN_DIR)
+    if DATA_CURATED_TEST_DIR.exists():
+        print(f"Cleaning existing curated test directory at {DATA_CURATED_TEST_DIR}...")
+        shutil.rmtree(DATA_CURATED_TEST_DIR)
 
     rng = random.Random(SEED)
     total_train = 0
     total_test = 0
 
     for sign in CLASSES:
-        src_class_dir = SRC_DIR / sign
+        src_class_dir = DATA_CROPPED_DIR / sign
         if not src_class_dir.exists():
             print(f"  Warning: class {sign} not found, skipping.")
             continue
@@ -77,8 +40,8 @@ def split_dataset() -> None:
         train_images = images[:split_idx]
         test_images = images[split_idx:]
 
-        train_dst = TRAIN_DIR / sign
-        test_dst = TEST_DIR / sign
+        train_dst = DATA_CURATED_TRAIN_DIR / sign
+        test_dst = DATA_CURATED_TEST_DIR / sign
         train_dst.mkdir(parents=True, exist_ok=True)
         test_dst.mkdir(parents=True, exist_ok=True)
 
@@ -92,7 +55,7 @@ def split_dataset() -> None:
         print(f"  Class {sign}: {len(train_images)} train, {len(test_images)} test")
 
     print(f"\nTotal: {total_train} train, {total_test} test")
-    print(f"Output: {TRAIN_DIR} and {TEST_DIR}")
+    print(f"Output: {DATA_CURATED_TRAIN_DIR} and {DATA_CURATED_TEST_DIR}")
 
 
 def main() -> None:

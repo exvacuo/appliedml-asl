@@ -1,5 +1,6 @@
 import numpy as np
-from asl_detector.data.dataloader import load_data, SEED
+from asl_detector.constants import SEED
+from asl_detector.data.dataloader import load_data
 from asl_detector.features.extract_features import extract_features
 from sklearn.model_selection import StratifiedKFold
 from sklearn.decomposition import PCA

@@ -3,10 +3,7 @@ import subprocess
 import zipfile
 from pathlib import Path
 
-
-DATA_DIR = Path("data/raw")
-ZIP_PATH = DATA_DIR / "asl-alphabet.zip"
-KAGGLE_DATASET = "grassknoted/asl-alphabet"
+from asl_detector.constants import DATA_RAW_BASE_DIR, KAGGLE_DATASET, ZIP_PATH
 
 
 def download_dataset() -> None:
@@ -16,7 +13,7 @@ def download_dataset() -> None:
         raise SystemExit(1)
 
     print("Downloading the dataset...")
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    DATA_RAW_BASE_DIR.mkdir(parents=True, exist_ok=True)
     subprocess.run(
         [
             "kaggle",
@@ -25,7 +22,7 @@ def download_dataset() -> None:
             "-d",
             KAGGLE_DATASET,
             "-p",
-            str(DATA_DIR),
+            str(DATA_RAW_BASE_DIR),
             "--force",
         ],
         check=True,
@@ -34,12 +31,12 @@ def download_dataset() -> None:
 
     print("Decompressing files...")
     with zipfile.ZipFile(ZIP_PATH) as dataset:
-        dataset.extractall(DATA_DIR)
+        dataset.extractall(DATA_RAW_BASE_DIR)
     ZIP_PATH.unlink()
 
     for source, target in (
-        (DATA_DIR / "asl_alphabet_train", DATA_DIR / "train"),
-        (DATA_DIR / "asl_alphabet_test", DATA_DIR / "test"),
+        (DATA_RAW_BASE_DIR / "asl_alphabet_train", DATA_RAW_BASE_DIR / "train"),
+        (DATA_RAW_BASE_DIR / "asl_alphabet_test", DATA_RAW_BASE_DIR / "test"),
     ):
         if source.exists():
             if target.exists():

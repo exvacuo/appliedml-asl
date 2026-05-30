@@ -2,10 +2,7 @@ from pathlib import Path
 
 import cv2
 
-
-PIXELS_TO_CROP = 3
-SRC_DIR = Path("data/deduplicated/train")
-DST_DIR = Path("data/cropped")
+from asl_detector.constants import DATA_CROPPED_DIR, DATA_DEDUPLICATED_DIR, PIXELS_TO_CROP
 
 
 def crop_image(src_path: Path, dst_path: Path, pixels: int = PIXELS_TO_CROP) -> bool:
@@ -23,10 +20,10 @@ def crop_image(src_path: Path, dst_path: Path, pixels: int = PIXELS_TO_CROP) -> 
 def crop_dataset() -> None:
     print("Starting image cropping step...")
 
-    print(f"Cropping images from {SRC_DIR} to {DST_DIR}...")
+    print(f"Cropping images from {DATA_DEDUPLICATED_DIR} to {DATA_CROPPED_DIR}...")
     total_cropped = 0
-    for src_class_dir in sorted(path for path in SRC_DIR.iterdir() if path.is_dir()):
-        dst_class_dir = DST_DIR / src_class_dir.name
+    for src_class_dir in sorted(path for path in DATA_DEDUPLICATED_DIR.iterdir() if path.is_dir()):
+        dst_class_dir = DATA_CROPPED_DIR / src_class_dir.name
         images = sorted(src_class_dir.glob("*.jpg"))
 
         class_cropped = 0
