@@ -1,18 +1,12 @@
-import os
 import optuna
-
-# Force CPU usage to bypass GPU/cuDNN compatibility issues
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-os.environ["TF_XLA_FLAGS"] = "--tf_xla_enable_xla_devices=false"
+from asl_detector.constants import PHASE1_SEARCH_SPACE, PHASE2_SEARCH_SPACE, SEED
 
 import tensorflow as tf
 
 
 from asl_detector.models.mobilenetv2 import ASLMobilenetv2
 from asl_detector.data.dataloader import load_data
-from asl_detector.constants import PHASE1_SEARCH_SPACE, PHASE2_SEARCH_SPACE, SEED
-from asl_detector.data.preprocess_data import preprocess_mobilenet, create_augmentation_layer
-from asl_detector.models.train.train_mobilenet import augment_dataset
+from asl_detector.data.preprocess_data import preprocess_mobilenet, augment_dataset
 
 
 ### Phase 1: Tune the learning rate + Dropout rate for the classifier head, with the backbone frozen.
@@ -77,7 +71,7 @@ def objective_phase2(trial, dropout_rate, batch_size):
 def find_hyperparameters():
     "" "Run Phase 1 hyperparameter tuning."""
     study_phase_1 = optuna.create_study(direction="maximize",
-                                sampler=optuna.samplers.GridSampler(PHASE1_SEARCH_SPACE),
+                                sampler=optuna.samplers.GridSampler(PHASE1_SEARCH_SPACE, seed=SEED),
                                     pruner=optuna.pruners.MedianPruner()
                                     )
     

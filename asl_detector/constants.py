@@ -6,6 +6,11 @@ DATA_RAW_TRAIN_DIR = DATA_RAW_BASE_DIR / "train" / "asl_alphabet_train"
 ZIP_PATH = DATA_RAW_BASE_DIR / "asl-alphabet.zip"
 KAGGLE_DATASET = "grassknoted/asl-alphabet"
 
+AUGMENTED_COPIES_PER_IMAGE = 3
+MODEL_DIR = Path("models")
+WEIGHTS_PATH = MODEL_DIR / "mobilenetv2.weights.h5"
+
+
 DATA_DEDUPLICATED_DIR = Path("data/deduplicated/train")
 DATA_CROPPED_DIR = Path("data/cropped")
 DATA_CURATED_TRAIN_DIR = Path("data/curated/train")
