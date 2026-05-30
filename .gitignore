@@ -8,3 +8,4 @@ venv/
 # Local datasets
 /data/
 .venv/
+models/mobilenetv2.weights.h5
