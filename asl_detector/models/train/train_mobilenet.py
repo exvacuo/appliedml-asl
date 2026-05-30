@@ -8,17 +8,26 @@ from asl_detector.models.mobilenetv2 import ASLMobilenetv2
 from asl_detector.models.train.tune import find_hyperparameters
 from asl_detector.constants import AUGMENTED_COPIES_PER_IMAGE, MODEL_DIR, WEIGHTS_PATH
 
+import os
+os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=0"
+os.environ["XLA_FLAGS"] = "--xla_gpu_strict_conv_algorithm_picker=false --xla_gpu_autotune_level=0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
-def setup_gpu() -> None:
-    """Configure GPU memory growth and print device info."""
+def setup_gpu():
+    import tensorflow as tf
+
     gpus = tf.config.list_physical_devices("GPU")
-    if gpus:
-        for gpu in gpus:
-            tf.config.experimental.set_memory_growth(gpu, True)
-        print(f"GPU(s) detected: {[g.name for g in gpus]}")
-    else:
+    if not gpus:
         print("WARNING: No GPU detected. Training will run on CPU (very slow).")
+        return
 
+    print(f"GPU detected: {gpus}")
+
+    for gpu in gpus:
+        try:
+            tf.config.experimental.set_memory_growth(gpu, True)
+        except RuntimeError as e:
+            print(f"GPU already initialized; skipping memory_growth: {e}")
 
 
 def train_model():

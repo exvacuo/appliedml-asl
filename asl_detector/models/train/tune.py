@@ -29,15 +29,26 @@ def objective(trial):
 
     model = ASLMobilenetv2(dropout_rate=dropout_rate)
 
-    model.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
-                  loss="sparse_categorical_crossentropy",
-                  metrics=["accuracy"])
-    
-    model.model.fit(train_combined, validation_data=val_preprocessed, epochs=20,
-              callbacks=[tf.keras.callbacks.EarlyStopping(monitor="val_loss",
-                                                           patience=3,
-                                                           restore_best_weights=True)])
-              
+    model.model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"],
+        jit_compile=False,
+        run_eagerly=True,
+    )
+
+    model.model.fit(
+        train_combined,
+        validation_data=val_preprocessed,
+        epochs=20,
+        callbacks=[
+            tf.keras.callbacks.EarlyStopping(
+                monitor="val_loss",
+                patience=3,
+                restore_best_weights=True,
+            )
+        ],
+    )              
     _, val_accuracy = model.model.evaluate(val_preprocessed)
     if val_accuracy > best_val_accuracy:
         best_val_accuracy = val_accuracy
