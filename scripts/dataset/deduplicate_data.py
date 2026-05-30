@@ -3,44 +3,9 @@ import shutil
 from pathlib import Path
 
 from imagededup.methods import PHash
+from matplotlib import image
 
-
-CLASSES = [
-    "A",
-    "B",
-    "C",
-    "D",
-    "del",
-    "E",
-    "F",
-    "G",
-    "H",
-    "I",
-    "J",
-    "K",
-    "L",
-    "M",
-    "N",
-    "nothing",
-    "O",
-    "P",
-    "Q",
-    "R",
-    "S",
-    "space",
-    "T",
-    "U",
-    "V",
-    "W",
-    "X",
-    "Y",
-    "Z",
-]
-SEED = 42
-BALANCE_THRESHOLD_EXCLUDED_CLASSES = {"nothing"}
-OVERSAMPLE_UNDER_TARGET_CLASSES = {"nothing"}
-DATA_RAW_DIR = Path("data/raw/train/asl_alphabet_train")
-OUTPUT_DIR = Path("data/deduplicated/train")
+from asl_detector.constants import BALANCE_THRESHOLD_EXCLUDED_CLASSES, CLASSES, DATA_DEDUPLICATED_DIR, DATA_RAW_TRAIN_DIR, OVERSAMPLE_UNDER_TARGET_CLASSES, SEED
 
 
 def find_near_duplicates(phasher: PHash, image_dir: Path) -> set[str]:
@@ -60,8 +25,8 @@ def find_near_duplicates(phasher: PHash, image_dir: Path) -> set[str]:
 
         seen = set()
         to_remove = set()
-        for image, matches in duplicates.items():
-            for match in matches:
+        for image in sorted(duplicates.keys()):
+            for match in sorted(duplicates[image]):
                 pair = frozenset([image, match])
                 if pair not in seen:
                     seen.add(pair)
@@ -81,11 +46,11 @@ def copy_downsampled_dataset(to_remove: set[str], output_dir: Path) -> None:
 
     class_to_images = {}
     for sign in CLASSES:
-        src_class_dir = DATA_RAW_DIR / sign
+        src_class_dir = DATA_RAW_TRAIN_DIR / sign
         if not src_class_dir.exists():
             continue
 
-        images = list(src_class_dir.glob("*.jpg"))
+        images = sorted(src_class_dir.glob("*.jpg"))
         candidate_images = [img for img in images if img.name not in to_remove]
 
         class_to_images[sign] = candidate_images
@@ -151,10 +116,10 @@ def copy_downsampled_dataset(to_remove: set[str], output_dir: Path) -> None:
 
 def deduplicate_dataset() -> None:
     print("Finding near-duplicates using PHash...")
-    total_to_remove = find_near_duplicates(PHash(), DATA_RAW_DIR)
+    total_to_remove = find_near_duplicates(PHash(), DATA_RAW_TRAIN_DIR)
     print(f"Found {len(total_to_remove)} near-duplicates across the dataset.")
 
-    copy_downsampled_dataset(total_to_remove, OUTPUT_DIR)
+    copy_downsampled_dataset(total_to_remove, DATA_DEDUPLICATED_DIR)
 
 
 def main() -> None:
