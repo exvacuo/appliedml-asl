@@ -1,9 +1,10 @@
 import tensorflow as tf
 
 class ASLMobilenetv2():
-    def __init__(self, num_classes: int = 29, dropout_rate: float = 0.2):
+    def __init__(self, num_classes: int = 29, dropout_rate: float = 0.2, unfreeze_top_n_layers: int = 0):
         self.num_classes = num_classes
         self.dropout_rate = dropout_rate
+        self.unfreeze_top_n_layers = unfreeze_top_n_layers
         ## Base model
         self.base_model = tf.keras.applications.MobileNetV2(
             input_shape=(224, 224, 3),
@@ -12,6 +13,8 @@ class ASLMobilenetv2():
         )
         self.base_model.trainable = False
         self.build_classifier(num_classes)
+        if unfreeze_top_n_layers > 0:
+            self.unfreeze_top_n_layers(unfreeze_top_n_layers)
     
     def build_classifier(self, num_classes: int = 29):
         inputs = tf.keras.Input(shape=(224, 224, 3))
@@ -27,6 +30,3 @@ class ASLMobilenetv2():
         self.base_model.trainable = True
         for layer in self.base_model.layers[:-n]:
             layer.trainable = False
-
-model = ASLMobilenetv2()
-model.model.summary()

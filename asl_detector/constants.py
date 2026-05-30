@@ -27,3 +27,16 @@ OVERSAMPLE_UNDER_TARGET_CLASSES = {"nothing"}
 IMAGE_SIZE = (224, 224)
 BATCH_SIZE = 32
 PIXELS_TO_CROP = 3
+
+# Hyperparameter Tuning Params
+
+PHASE1_SEARCH_SPACE = {
+    "learning_rate": [0.01, 0.001, 0.0001],
+    "dropout_rate": [0.2, 0.3, 0.5],
+    "batch_size": [16, 32, 64],
+}
+
+PHASE2_SEARCH_SPACE = {
+    "learning_rate": [0.001, 0.0001, 0.00001],
+    "n_layers": [ 25, 50, 75],
+}
