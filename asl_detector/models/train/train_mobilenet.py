@@ -9,11 +9,20 @@ from asl_detector.models.train.tune import find_hyperparameters
 from asl_detector.constants import AUGMENTED_COPIES_PER_IMAGE, MODEL_DIR, WEIGHTS_PATH
 
 
-
+def setup_gpu() -> None:
+    """Configure GPU memory growth and print device info."""
+    gpus = tf.config.list_physical_devices("GPU")
+    if gpus:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+        print(f"GPU(s) detected: {[g.name for g in gpus]}")
+    else:
+        print("WARNING: No GPU detected. Training will run on CPU (very slow).")
 
 
 
 def train_model():
+    setup_gpu()
     hyperparams_phase_1, hyperparams_phase_2 = find_hyperparameters()
 
     train, val, test = load_data(batch_size=hyperparams_phase_1["batch_size"], baseline=False)
