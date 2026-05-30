@@ -9,9 +9,13 @@ from asl_detector.data.dataloader import load_data
 from asl_detector.data.preprocess_data import preprocess_mobilenet, augment_dataset
 
 
+best_weights = None
+best_val_accuracy = 0.0
+
 ### Phase 1: Tune the learning rate + Dropout rate for the classifier head, with the backbone frozen.
 def objective(trial):
-    tf.keras.backend.clear_session() 
+    global best_weights, best_val_accuracy
+    tf.keras.backend.clear_session()
 
     learning_rate = trial.suggest_categorical("learning_rate", PHASE1_SEARCH_SPACE["learning_rate"])
     dropout_rate = trial.suggest_categorical("dropout_rate", PHASE1_SEARCH_SPACE["dropout_rate"])
@@ -35,12 +39,15 @@ def objective(trial):
                                                            restore_best_weights=True)])
               
     _, val_accuracy = model.model.evaluate(val_preprocessed)
+    if val_accuracy > best_val_accuracy:
+        best_val_accuracy = val_accuracy
+        best_weights = model.model.get_weights()
     return val_accuracy   
 
 
 
 ### Phase 2: Unfreeze the last N layers of the backbone and tune N, learning rate, and dropout rate together.
-def objective_phase2(trial, dropout_rate, batch_size):
+def objective_phase2(trial, dropout_rate, batch_size, weights):
     tf.keras.backend.clear_session() 
 
     learning_rate = trial.suggest_categorical("learning_rate", PHASE2_SEARCH_SPACE["learning_rate"])
@@ -54,6 +61,8 @@ def objective_phase2(trial, dropout_rate, batch_size):
 
 
     model = ASLMobilenetv2(dropout_rate=dropout_rate, unfreeze_top_n_layers=n_layers)
+    if weights is not None:
+        model.model.set_weights(weights)
     
 
     model.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
@@ -87,7 +96,7 @@ def find_hyperparameters():
                                         sampler=optuna.samplers.TPESampler(seed=SEED),
                                         pruner=optuna.pruners.MedianPruner()
                                         )
-    study_phase_2.optimize(lambda trial: objective_phase2(trial, best_dropout_rate, best_batch_size), n_trials=9)
+    study_phase_2.optimize(lambda trial: objective_phase2(trial, best_dropout_rate, best_batch_size, best_weights), n_trials=9)
     hyperparams_phase_2 = study_phase_2.best_params
     print("Best hyperparameters from Phase 2:", hyperparams_phase_2)
 
