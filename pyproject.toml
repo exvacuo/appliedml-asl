@@ -10,8 +10,11 @@ dependencies = [
     "optuna>=4.8.0",
     "pre-commit>=4.6.0",
     "pydantic>=2.13.4",
+    "python-multipart>=0.0.29",
     "scikit-learn>=1.8.0",
-    "tensorflow==2.16.2",
+    "tensorflow==2.16.2; sys_platform != 'win32'",
+    "tensorflow-intel==2.16.2; sys_platform == 'win32'",
+    "uvicorn>=0.48.0",
 ]
 
 [dependency-groups]
