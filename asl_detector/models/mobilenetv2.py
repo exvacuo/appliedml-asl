@@ -4,7 +4,7 @@ class ASLMobilenetv2():
     def __init__(self, num_classes: int = 29, dropout_rate: float = 0.2, unfreeze_top_n_layers: int = 0):
         self.num_classes = num_classes
         self.dropout_rate = dropout_rate
-        self.unfreeze_top_n_layers = unfreeze_top_n_layers
+        self.top_n_layers_to_unfreeze = unfreeze_top_n_layers
         ## Base model
         self.base_model = tf.keras.applications.MobileNetV2(
             input_shape=(224, 224, 3),
@@ -27,6 +27,9 @@ class ASLMobilenetv2():
         
     def unfreeze_top_n_layers(self, n: int):
         """Phase 2: unfreeze the last N layers of the backbone."""
+        if n <= 0:
+            return
+
         self.base_model.trainable = True
         for layer in self.base_model.layers[:-n]:
             layer.trainable = False

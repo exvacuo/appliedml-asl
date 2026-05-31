@@ -19,6 +19,7 @@ DATA_CURATED_TEST_DIR = Path("data/curated/test")
 # Model Paths
 MODEL_DIR = Path("models")
 MODEL_WEIGHTS_PATH = MODEL_DIR / "mobilenetv2.weights.h5"
+CHECKPOINT_DIR = MODEL_DIR / "checkpoints"
 
 # Dataset Information
 CLASSES = [

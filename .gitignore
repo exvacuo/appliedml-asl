@@ -9,3 +9,4 @@ venv/
 /data/
 .venv/
 models/mobilenetv2.weights.h5
+models/checkpoints/

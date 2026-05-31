@@ -1,16 +1,10 @@
-from pathlib import Path
-
-
 import tensorflow as tf
+from asl_detector.constants import CHECKPOINT_DIR, MODEL_DIR, MODEL_WEIGHTS_PATH
 from asl_detector.data.dataloader import load_data
 from asl_detector.data.preprocess_data import preprocess_mobilenet, augment_dataset
 from asl_detector.models.mobilenetv2 import ASLMobilenetv2
 from asl_detector.models.train.tune import find_hyperparameters
-from asl_detector.constants import AUGMENTED_COPIES_PER_IMAGE, MODEL_DIR, WEIGHTS_PATH
 
-from asl_detector.constants import MODEL_DIR, MODEL_WEIGHTS_PATH
-# branch created
-AUGMENTED_COPIES_PER_IMAGE = 3
 
 def setup_gpu():
     import tensorflow as tf
@@ -29,6 +23,34 @@ def setup_gpu():
             print(f"GPU already initialized; skipping memory_growth: {e}")
 
 
+def training_callbacks(phase_name):
+    CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
+    return [
+        tf.keras.callbacks.BackupAndRestore(
+            backup_dir=str(CHECKPOINT_DIR / f"backup_{phase_name}"),
+        ),
+        tf.keras.callbacks.EarlyStopping(
+            monitor="val_loss",
+            patience=3,
+            restore_best_weights=True,
+        ),
+        tf.keras.callbacks.ModelCheckpoint(
+            filepath=str(CHECKPOINT_DIR / f"{phase_name}_best.weights.h5"),
+            monitor="val_loss",
+            save_best_only=True,
+            save_weights_only=True,
+        ),
+    ]
+
+
+def checkpoint_path(phase_name):
+    return CHECKPOINT_DIR / f"{phase_name}_best.weights.h5"
+
+
+def done_path(phase_name):
+    return CHECKPOINT_DIR / f"{phase_name}.done"
+
+
 def train_model():
     setup_gpu()
     hyperparams_phase_1, hyperparams_phase_2 = find_hyperparameters()
@@ -43,25 +65,33 @@ def train_model():
 
     ## Phase 1
     model = ASLMobilenetv2(num_classes=29, dropout_rate=hyperparams_phase_1["dropout_rate"])
-    model.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=hyperparams_phase_1["learning_rate"]),
-                  loss="sparse_categorical_crossentropy",
-                  metrics=["accuracy"])
-    model.model.fit(train_combined, validation_data=val_preprocessed, epochs=30,
-              callbacks=[tf.keras.callbacks.EarlyStopping(monitor="val_loss",
-                                                           patience=3,
-                                                           restore_best_weights=True)])
+    if done_path("phase1").exists() and checkpoint_path("phase1").exists():
+        model.model.load_weights(checkpoint_path("phase1"))
+        print(f"Loaded Phase 1 checkpoint from {checkpoint_path('phase1')}")
+    else:
+        model.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=hyperparams_phase_1["learning_rate"]),
+                    loss="sparse_categorical_crossentropy",
+                    metrics=["accuracy"])
+        model.model.fit(train_combined, validation_data=val_preprocessed, epochs=30,
+                callbacks=training_callbacks("phase1"))
+        done_path("phase1").touch()
     
     ## Phase 2
-    model.unfreeze_top_n_layers(hyperparams_phase_2["n_layers"])
-    model.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=hyperparams_phase_2["learning_rate"]),
-                  loss="sparse_categorical_crossentropy",
-                  metrics=["accuracy"])
-    model.model.fit(train_combined, validation_data=val_preprocessed, epochs=20,
-              callbacks=[tf.keras.callbacks.EarlyStopping(monitor="val_loss",
-                                                           patience=3,
-                                                           restore_best_weights=True)])
-    
-    
+    if done_path("phase2").exists() and checkpoint_path("phase2").exists():
+        model.unfreeze_top_n_layers(hyperparams_phase_2["n_layers"])
+        model.model.load_weights(checkpoint_path("phase2"))
+        print(f"Loaded Phase 2 checkpoint from {checkpoint_path('phase2')}")
+    else:
+        model.model.load_weights(checkpoint_path("phase1"))
+        print(f"Loaded Phase 1 checkpoint from {checkpoint_path('phase1')}")
+        model.unfreeze_top_n_layers(hyperparams_phase_2["n_layers"])
+        model.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=hyperparams_phase_2["learning_rate"]),
+                    loss="sparse_categorical_crossentropy",
+                    metrics=["accuracy"])
+        model.model.fit(train_combined, validation_data=val_preprocessed, epochs=20,
+                callbacks=training_callbacks("phase2"))
+        done_path("phase2").touch()
+
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     model.model.save_weights(MODEL_WEIGHTS_PATH)
     print(f"Saved model weights to {MODEL_WEIGHTS_PATH}")
