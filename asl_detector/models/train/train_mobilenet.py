@@ -8,10 +8,9 @@ from asl_detector.models.mobilenetv2 import ASLMobilenetv2
 from asl_detector.models.train.tune import find_hyperparameters
 from asl_detector.constants import AUGMENTED_COPIES_PER_IMAGE, MODEL_DIR, WEIGHTS_PATH
 
-import os
-os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=0"
-os.environ["XLA_FLAGS"] = "--xla_gpu_strict_conv_algorithm_picker=false --xla_gpu_autotune_level=0"
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
+from asl_detector.constants import MODEL_DIR, MODEL_WEIGHTS_PATH
+# branch created
+AUGMENTED_COPIES_PER_IMAGE = 3
 
 def setup_gpu():
     import tensorflow as tf
@@ -64,8 +63,8 @@ def train_model():
     
     
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
-    model.model.save_weights(WEIGHTS_PATH)
-    print(f"Saved model weights to {WEIGHTS_PATH}")
+    model.model.save_weights(MODEL_WEIGHTS_PATH)
+    print(f"Saved model weights to {MODEL_WEIGHTS_PATH}")
     test_loss, test_acc = model.model.evaluate(test_preprocessed)
     print(f"Test accuracy: {test_acc:.4f}, Test loss: {test_loss:.4f}")
 

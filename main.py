@@ -1,33 +1,30 @@
-import tensorflow as tf
+import numpy as np
+from io import BytesIO
+from PIL import Image
+from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 
-from asl_detector.data.dataloader import load_data
-from asl_detector.models.knn import run_kfold, train_final_model, evaluate_on_test
-from asl_detector.features import extract_features
-from asl_detector.data.preprocess_data import preprocess_knn, find_near_duplicates
+from asl_detector.models.mobilenetv2 import ASLMobilenetv2
+from asl_detector.constants import CLASSES, IMAGE_SIZE, MODEL_WEIGHTS_PATH
 
+app = FastAPI()
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-class Pipeline:
-    """Class that encapsulates the pipeline for the ASL classification task."""
+# Load model once at startup
+model = ASLMobilenetv2(num_classes=len(CLASSES), dropout_rate=0.2).model
+model.load_weights(MODEL_WEIGHTS_PATH)
 
-    def __init__(self) -> None:
-        self.train = None
-        self.val = None
-        self.test = None
-
-    def run_baseline(self, extract_features):
-        """Load data, preprocess for KNN, and trains with Kfold cross validation"""
-        train, val, test = load_data(baseline=True)
-        X_train, y_train = extract_features(dataset=train)
-        K_fold = run_kfold(X_train, y_train)
-        
-        return train_results
-
+@app.post("/predict")
+async def predict(file: UploadFile = File(...), top_k: int = 5):
+    """Predict ASL gesture from image. Pass ?top_k=X in URL to get top X results."""
+    # Process image
+    img = Image.open(BytesIO(await file.read())).convert("RGB").resize(IMAGE_SIZE)
+    batch = preprocess_input(np.expand_dims(np.array(img, dtype=np.float32), axis=0))
     
-
-
-if __name__ == "__main__":
+    # Predict
+    preds = model.predict(batch, verbose=0)[0]
     
-    image_dir = "data/raw/test/asl_alphabet_test"
-    duplicates = find_near_duplicates(image_dir)
-
-    print("Near-duplicate images:", len(duplicates))
+    # Get top_k results
+    top_indices = np.argsort(preds)[-top_k:][::-1]
+    return [{"class": CLASSES[i], "confidence": float(preds[i])} for i in top_indices]
