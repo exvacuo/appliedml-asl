@@ -6,6 +6,11 @@ DATA_RAW_TRAIN_DIR = DATA_RAW_BASE_DIR / "train" / "asl_alphabet_train"
 ZIP_PATH = DATA_RAW_BASE_DIR / "asl-alphabet.zip"
 KAGGLE_DATASET = "grassknoted/asl-alphabet"
 
+AUGMENTED_COPIES_PER_IMAGE = 3
+MODEL_DIR = Path("models")
+WEIGHTS_PATH = MODEL_DIR / "mobilenetv2.weights.h5"
+
+
 DATA_DEDUPLICATED_DIR = Path("data/deduplicated/train")
 DATA_CROPPED_DIR = Path("data/cropped")
 DATA_CURATED_TRAIN_DIR = Path("data/curated/train")
@@ -32,3 +37,16 @@ OVERSAMPLE_UNDER_TARGET_CLASSES = {"nothing"}
 IMAGE_SIZE = (224, 224)
 BATCH_SIZE = 32
 PIXELS_TO_CROP = 3
+
+# Hyperparameter Tuning Params
+
+PHASE1_SEARCH_SPACE = {
+    "learning_rate": [0.01, 0.001, 0.0001],
+    "dropout_rate": [0.2, 0.3, 0.5],
+    "batch_size": [16, 32, 64],
+}
+
+PHASE2_SEARCH_SPACE = {
+    "learning_rate": [0.001, 0.0001, 0.00001],
+    "n_layers": [ 25, 50, 75],
+}

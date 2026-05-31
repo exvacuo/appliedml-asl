@@ -1,19 +1,17 @@
 [project]
 name = "appliedml-asl"
 version = "0.1.0"
-requires-python = ">=3.12"
+requires-python = ">=3.11,<3.12"
 dependencies = [
     "fastapi>=0.136.1",
     "imagededup>=0.3.3.post2",
     "kaggle>=2.1.2",
-    "opencv-python>=4.13.0.92",
+    "opencv-python<4.13",
+    "optuna>=4.8.0",
     "pre-commit>=4.6.0",
     "pydantic>=2.13.4",
     "scikit-learn>=1.8.0",
-    "tensorflow[and-cuda]==2.20.*; sys_platform == 'linux'",
-    "tensorflow==2.20.*; sys_platform == 'darwin' or sys_platform == 'win32'",
-    "uvicorn>=0.47.0",
-    "python-multipart>=0.0.29",
+    "tensorflow==2.16.2",
 ]
 
 [dependency-groups]

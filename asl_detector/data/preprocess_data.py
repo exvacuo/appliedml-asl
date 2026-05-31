@@ -1,6 +1,7 @@
 import tensorflow as tf
 from pathlib import Path
-from asl_detector.constants import IMAGE_SIZE, SEED
+from asl_detector.constants import IMAGE_SIZE, SEED, AUGMENTED_COPIES_PER_IMAGE
+
 
 
 
@@ -89,3 +90,13 @@ def create_augmentation_layer():
         ],
         name="augmentation",
     )
+
+augmenter = create_augmentation_layer()
+def augment_dataset(images, labels):
+    augmented_batches = [
+        augmenter(images, training=True)
+        for _ in range(AUGMENTED_COPIES_PER_IMAGE)
+    ]
+    augmented_images = tf.concat(augmented_batches, axis=0)
+    augmented_labels = tf.repeat(labels, repeats=AUGMENTED_COPIES_PER_IMAGE, axis=0)
+    return augmented_images, augmented_labels
