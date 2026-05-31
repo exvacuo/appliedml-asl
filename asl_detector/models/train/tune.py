@@ -34,7 +34,7 @@ def objective(trial):
         loss="sparse_categorical_crossentropy",
         metrics=["accuracy"],
         jit_compile=False,
-        run_eagerly=True,
+        run_eagerly=False,
     )
 
     model.model.fit(
@@ -65,9 +65,9 @@ def objective_phase2(trial, dropout_rate, batch_size, weights):
     n_layers = trial.suggest_categorical("n_layers", PHASE2_SEARCH_SPACE["n_layers"])
 
     train_ds, val_ds, _ = load_data(batch_size=batch_size, baseline=False)
-    train_combined = train_ds.concatenate(train_ds.map(augment_dataset))
-    train_combined = train_combined.map(preprocess_mobilenet)
-    val_preprocessed = val_ds.map(preprocess_mobilenet)
+    train_combined = train_ds.concatenate(train_ds.map(augment_dataset)).shuffle(1000)
+    train_combined = train_combined.map(preprocess_mobilenet).prefetch(tf.data.AUTOTUNE)
+    val_preprocessed = val_ds.map(preprocess_mobilenet).prefetch(tf.data.AUTOTUNE)
 
 
 
@@ -91,11 +91,11 @@ def objective_phase2(trial, dropout_rate, batch_size, weights):
 def find_hyperparameters():
     "" "Run Phase 1 hyperparameter tuning."""
     study_phase_1 = optuna.create_study(direction="maximize",
-                                sampler=optuna.samplers.GridSampler(PHASE1_SEARCH_SPACE, seed=SEED),
+                                sampler=optuna.samplers.TPESampler(seed=SEED),
                                     pruner=optuna.pruners.MedianPruner()
                                     )
     
-    study_phase_1.optimize(objective, n_trials=27) 
+    study_phase_1.optimize(objective, n_trials=10) 
     hyperparams_phase_1 = study_phase_1.best_params
     print("Best hyperparameters from Phase 1:", hyperparams_phase_1)
 
@@ -107,7 +107,7 @@ def find_hyperparameters():
                                         sampler=optuna.samplers.TPESampler(seed=SEED),
                                         pruner=optuna.pruners.MedianPruner()
                                         )
-    study_phase_2.optimize(lambda trial: objective_phase2(trial, best_dropout_rate, best_batch_size, best_weights), n_trials=9)
+    study_phase_2.optimize(lambda trial: objective_phase2(trial, best_dropout_rate, best_batch_size, best_weights), n_trials=5)
     hyperparams_phase_2 = study_phase_2.best_params
     print("Best hyperparameters from Phase 2:", hyperparams_phase_2)
 

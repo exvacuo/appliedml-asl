@@ -35,11 +35,11 @@ def train_model():
     hyperparams_phase_1, hyperparams_phase_2 = find_hyperparameters()
 
     train, val, test = load_data(batch_size=hyperparams_phase_1["batch_size"], baseline=False)
-    train_combined = train.concatenate(train.map(augment_dataset))
-    train_combined = train_combined.map(preprocess_mobilenet)
+    train_combined = train.concatenate(train.map(augment_dataset)).shuffle(1000)
+    train_combined = train_combined.map(preprocess_mobilenet).prefetch(tf.data.AUTOTUNE)
 
-    val_preprocessed = val.map(preprocess_mobilenet)
-    test_preprocessed = test.map(preprocess_mobilenet)
+    val_preprocessed = val.map(preprocess_mobilenet).prefetch(tf.data.AUTOTUNE)
+    test_preprocessed = test.map(preprocess_mobilenet).prefetch(tf.data.AUTOTUNE)
 
 
     ## Phase 1
