@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 # Paths
 DATA_RAW_BASE_DIR = Path("data/raw")
@@ -20,6 +21,8 @@ DATA_CURATED_TEST_DIR = Path("data/curated/test")
 MODEL_DIR = Path("models")
 MODEL_WEIGHTS_PATH = MODEL_DIR / "mobilenetv2.weights.h5"
 CHECKPOINT_DIR = MODEL_DIR / "checkpoints"
+HF_MODEL_REPO_ID = os.getenv("HF_MODEL_REPO_ID", "xvacuo/asl-detector")
+HF_MODEL_FILENAME = os.getenv("HF_MODEL_FILENAME", "mobilenetv2.weights.h5")
 
 # Dataset Information
 CLASSES = [
