@@ -1,0 +1,12 @@
+.git
+.venv
+.pytest_cache
+__pycache__
+*.pyc
+.DS_Store
+
+data
+models/checkpoints
+models/*.h5
+
+appliedml_asl.egg-info
