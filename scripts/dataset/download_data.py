@@ -1,7 +1,6 @@
 import shutil
 import subprocess
 import zipfile
-from pathlib import Path
 
 from asl_detector.constants import DATA_RAW_BASE_DIR, KAGGLE_DATASET, ZIP_PATH
 
@@ -41,7 +40,8 @@ def download_dataset() -> None:
         if source.exists():
             if target.exists():
                 shutil.rmtree(target)
-            source.rename(target)
+            shutil.copytree(source, target)
+            shutil.rmtree(source)
 
     print("Download completed!")
 
