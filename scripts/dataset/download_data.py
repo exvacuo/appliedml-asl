@@ -30,10 +30,8 @@ def download_dataset() -> None:
     )
 
     print("Decompressing files (this might still take a minute on cluster storage)...")
-    subprocess.run(
-        ["unzip", "-q", "-o", str(ZIP_PATH), "-d", str(DATA_RAW_BASE_DIR)],
-        check=True
-    )
+    with zipfile.ZipFile(ZIP_PATH) as zip_file:
+        zip_file.extractall(DATA_RAW_BASE_DIR)
     ZIP_PATH.unlink()
 
     for source, target in (
