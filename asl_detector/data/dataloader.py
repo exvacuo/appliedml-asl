@@ -1,18 +1,12 @@
 from pathlib import Path
-from typing import Callable
-import numpy as np
 
 import tensorflow as tf
 
-
-DATA_DIR = Path("data/raw/train/asl_alphabet_train")
-IMAGE_SIZE = (224, 224)
-BATCH_SIZE = 32
-SEED = 42
+from asl_detector.constants import BATCH_SIZE, DATA_CURATED_TEST_DIR, DATA_CURATED_TRAIN_DIR, IMAGE_SIZE, SEED
 
 
 def create_dataset(
-    data_dir: Path = DATA_DIR,
+    data_dir: Path = DATA_CURATED_TRAIN_DIR,
     image_size: tuple[int, int] = IMAGE_SIZE,
     batch_size: int = BATCH_SIZE,
     validation_split: float | None = None,
@@ -25,7 +19,7 @@ def create_dataset(
     if not data_dir.exists():
         raise FileNotFoundError(
             f"Could not find the data at {data_dir}. "
-            "Try downloading with python scripts/download_data.py"
+            "Try downloading with uv run scripts/craft_dataset.py"
         )
 
     return tf.keras.utils.image_dataset_from_directory(
@@ -43,42 +37,33 @@ def create_dataset(
 
 
 def load_data(
-    data_dir: Path = DATA_DIR,
+    data_dir: Path = DATA_CURATED_TRAIN_DIR,
+    test_data_dir: Path = DATA_CURATED_TEST_DIR,
     baseline: bool = False,
+    batch_size: int = BATCH_SIZE,
 ) -> tuple[tf.data.Dataset, tf.data.Dataset | None, tf.data.Dataset]:
-    """Return train (80%), val (10%), test (10%) datasets.
+    """Return datasets from the curated train/test split."""
 
-    Uses create_dataset's validation_split to carve out 20%, then splits
-    that remainder in half for val and test.  The remaining 20% is loaded
-    unbatched so we can split by sample count, then re-batched.
-    """
+    if baseline:
+        train_ds = create_dataset(data_dir=data_dir, batch_size=batch_size)
+        test_ds = create_dataset(data_dir=test_data_dir, shuffle=False, batch_size=batch_size)
+
+        return train_ds, None, test_ds
+
     train_ds = create_dataset(
         data_dir=data_dir,
         validation_split=0.2,
         subset="training",
+        batch_size=batch_size,
     )
 
-    # Load remaining 20% unbatched so we can split cleanly
     remaining_ds = create_dataset(
         data_dir=data_dir,
         validation_split=0.2,
         subset="validation",
-        batch_size=None,
-        shuffle=False,
+        batch_size=batch_size,
     )
 
-    if baseline == False:
-        # Split into equal halves → 10% val, 10% test
-        n_remaining = remaining_ds.cardinality()
-        if n_remaining == tf.data.UNKNOWN_CARDINALITY:
-            n_remaining = sum(1 for _ in remaining_ds)
-        half = int(n_remaining) // 2
+    test_ds = create_dataset(data_dir=test_data_dir, shuffle=False, batch_size=batch_size)
 
-        val_ds = remaining_ds.take(half).batch(BATCH_SIZE)
-        test_ds = remaining_ds.skip(half).batch(BATCH_SIZE)
-
-        return train_ds, val_ds, test_ds
-
-    test_ds = remaining_ds
-
-    return train_ds, None, test_ds
+    return train_ds, remaining_ds, test_ds

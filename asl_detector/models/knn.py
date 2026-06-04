@@ -1,12 +1,12 @@
-from asl_detector.data.dataloader import load_data, SEED, BATCH_SIZE
-from asl_detector.data.preprocess_data import create_augmentation_layer
+import numpy as np
+from asl_detector.constants import SEED
+from asl_detector.data.dataloader import load_data
 from asl_detector.features.extract_features import extract_features
 from sklearn.model_selection import StratifiedKFold
 from sklearn.decomposition import PCA
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, f1_score
-import numpy as np
-import tensorflow as tf
+
 
 N_FOLDS = 3
 KNN_K = 3
@@ -59,8 +59,8 @@ def train_final_model(
         k: int = KNN_K,
         metric: str = KNN_METRIC,
         algorithm: str = KNN_ALGORITHM,
-) -> KNeighborsClassifier:
-    """Train a single KNN on the full training set for inference/test evaluation."""
+) -> tuple[KNeighborsClassifier, PCA]:
+    """Fit a single KNN reference set for inference/test evaluation."""
     pca = PCA(n_components=PCA_COMPONENTS, random_state=SEED)
     X_pca = pca.fit_transform(X)
 
@@ -78,32 +78,25 @@ def evaluate_on_test(model: KNeighborsClassifier, X_test, y_test) -> dict:
         "test_f1": f1_score(y_test, y_pred, average="weighted"),
     }
 
-## Load splits
-train, val, test = load_data(baseline=True)
-test = test.batch(BATCH_SIZE)
+def main():
+    train, _, test = load_data(baseline=True)
 
-print("Augmenting training data...")
-## Augmentation
-augmenter = create_augmentation_layer()
-def augment_dataset(images, labels):
-    return augmenter(images), labels
+    ## Extract features
+    print("Extracting features for KNN...")
+    X_train, y_train = extract_features(dataset=train)
+    X_test, y_test = extract_features(dataset=test)
 
-train_combined = train.concatenate(train.map(augment_dataset))
+    ## Run Kfold
+    print("Running KNN with K-fold cross validation...")
+    K_fold = run_kfold(X_train, y_train)
+    print("KNN K-fold results:", K_fold)
 
+    ## Train final model
+    print("Training final KNN model on full training set...")
+    final_model, pca = train_final_model(X_train, y_train)
+    X_test = pca.transform(X_test)
+    test_results = evaluate_on_test(final_model, X_test, y_test)
+    print("KNN test results:", test_results)
 
-## Extract features
-print("Extracting features for KNN...")
-X_train, y_train = extract_features(dataset=train_combined)
-X_test, y_test = extract_features(dataset=test)
-
-## Run Kfold
-print("Running KNN with K-fold cross validation...")
-K_fold = run_kfold(X_train, y_train)
-print("KNN K-fold results:", K_fold)
-
-## Train final model
-print("Training final KNN model on full training set...")
-final_model, pca = train_final_model(X_train, y_train)
-X_test = pca.transform(X_test)
-test_results = evaluate_on_test(final_model, X_test, y_test)
-print("KNN test results:", test_results)
+if __name__ == "__main__":
+    main()

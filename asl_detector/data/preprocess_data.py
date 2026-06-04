@@ -1,4 +1,8 @@
 import tensorflow as tf
+from pathlib import Path
+from asl_detector.constants import IMAGE_SIZE, SEED, AUGMENTED_COPIES_PER_IMAGE
+
+
 
 
 # ── KNN baseline preprocessing ──────────────────────────────────────────────
@@ -7,9 +11,8 @@ import tensorflow as tf
 def preprocess_knn(images, labels, size=64):
     """Preprocess a batch of images for the KNN baseline.
 
-    Pipeline: crop border → grayscale → resize → normalize [0,1] → flatten.
+    Pipeline: grayscale → resize → normalize [0,1] → flatten.
     """
-    images = crop_blue_frame(images)
     images = tf.image.rgb_to_grayscale(images)
     images = tf.image.resize(images, (size, size))
     images = images / 255.0
@@ -17,16 +20,23 @@ def preprocess_knn(images, labels, size=64):
     return images, labels
 
 
-def crop_blue_frame(images, pixels=3):
-    """Crop the border from a batch of images."""
-    return images[:, pixels:-pixels, pixels:-pixels, :]
+# ── Extra augmentation functions ────────────────────────────────────────────
 
 
+def random_hue(images):
+    """Randomly shift image hue."""
+    return tf.image.random_hue(images, max_delta=0.25)
+
+
+def random_invert(images):
+    """Randomly invert about half of the images in a batch."""
+    random_values = tf.random.uniform((tf.shape(images)[0], 1, 1, 1))
+    inverted_images = 255.0 - images
+    return tf.where(random_values < 0.5, inverted_images, images)
 
 
 # ── MobileNetV2 preprocessing ───────────────────────────────────────────────
 
-MOBILENET_INPUT_SIZE = (224, 224)
 
 
 def preprocess_mobilenet(images, labels):
@@ -35,8 +45,7 @@ def preprocess_mobilenet(images, labels):
     Resizes to 224×224 and normalises pixel values from [0, 255] to [-1, 1]
     using MobileNetV2's built-in preprocess_input.
     """
-    images = crop_blue_frame(images)
-    images = tf.image.resize(images, MOBILENET_INPUT_SIZE)
+    images = tf.image.resize(images, IMAGE_SIZE)
     images = tf.keras.applications.mobilenet_v2.preprocess_input(images)
     return images, labels
 
@@ -45,19 +54,49 @@ def preprocess_mobilenet(images, labels):
 
 
 def create_augmentation_layer():
-    """Return a Sequential augmentation layer with mild transforms.
+    """Return a reproducible Sequential augmentation layer.
 
-    Augmentations (per proposal):
-      - Random rotation  ±10°
+    Augmentations:
+      - Random rotation  ±18°
       - Random translation  10% horizontal/vertical
       - Random zoom  10%
-      - Random brightness  ±10%
-      - Random contrast  10%
+      - Random brightness  ±20%
+      - Random contrast  20%
+      - Random hue shift
+      - Random color inversion
     """
-    return tf.keras.Sequential([
-        tf.keras.layers.RandomRotation(10 / 360),      # ±10°
-        tf.keras.layers.RandomTranslation(0.1, 0.1),   # 10% shift
-        tf.keras.layers.RandomZoom(0.1),                # 10% zoom
-        tf.keras.layers.RandomBrightness(0.1),          # ±10% brightness
-        tf.keras.layers.RandomContrast(0.1),            # ±10% contrast
-    ])
+    tf.keras.utils.set_random_seed(SEED)
+
+    return tf.keras.Sequential(
+        [
+            tf.keras.layers.RandomRotation(0.05, seed=SEED),
+            tf.keras.layers.RandomTranslation(
+                0.1,
+                0.1,
+                fill_mode="constant",
+                fill_value=0.0,
+                seed=SEED + 1,
+            ),
+            tf.keras.layers.RandomZoom(
+                0.1,
+                fill_mode="constant",
+                fill_value=0.0,
+                seed=SEED + 2,
+            ),
+            tf.keras.layers.RandomBrightness(0.2, seed=SEED + 3),
+            tf.keras.layers.RandomContrast(0.2, seed=SEED + 4),
+            tf.keras.layers.Lambda(random_hue),
+            tf.keras.layers.Lambda(random_invert),
+        ],
+        name="augmentation",
+    )
+
+augmenter = create_augmentation_layer()
+def augment_dataset(images, labels):
+    augmented_batches = [
+        augmenter(images, training=True)
+        for _ in range(AUGMENTED_COPIES_PER_IMAGE)
+    ]
+    augmented_images = tf.concat(augmented_batches, axis=0)
+    augmented_labels = tf.repeat(labels, repeats=AUGMENTED_COPIES_PER_IMAGE, axis=0)
+    return augmented_images, augmented_labels

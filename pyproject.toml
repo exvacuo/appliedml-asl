@@ -1,18 +1,33 @@
 [project]
 name = "appliedml-asl"
 version = "0.1.0"
-requires-python = ">=3.12"
+requires-python = ">=3.11,<3.12"
 dependencies = [
+    "fastapi>=0.136.1",
+    "huggingface-hub>=1.17.0",
+    "imagededup>=0.3.3.post2",
     "kaggle>=2.1.2",
-    "opencv-python>=4.13.0.92",
+    "opencv-python<4.13",
+    "optuna>=4.8.0",
     "pre-commit>=4.6.0",
+    "pydantic>=2.13.4",
+    "python-multipart>=0.0.29",
     "scikit-learn>=1.8.0",
-    "tensorflow>=2.21.0",
+    "tensorflow==2.16.2; sys_platform != 'win32'",
+    "tensorflow-intel==2.16.2; sys_platform == 'win32'",
+    "tensorflow-io-gcs-filesystem==0.31.0; sys_platform == 'win32'",
+    "tensorflow-io-gcs-filesystem==0.37.1; sys_platform != 'win32'",
+    "uvicorn>=0.48.0",
 ]
 
 [dependency-groups]
 dev = [
     "pytest>=9.0.3",
+]
+
+[tool.uv]
+required-environments = [
+    "sys_platform == 'win32'",
 ]
 
 [tool.setuptools.packages.find]

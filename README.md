@@ -1,126 +1,54 @@
-# Applied ML Template 🛠️
+# ASL MobileNetV2 predictor readme
+Welcome to our repo! This file contains instructions for setting up dependencies and venv for the asl-detector project (Applied ML).
 
-**Welcome to Applied Machine Learning!** This template is designed to streamline the development process and boost the quality of your code.
+# Setting up the virtual environment
+We use uv to manage dependencies in our repository. This project targets Python 3.11. The same `uv.lock` supports macOS and Windows, but each machine should create its own local `.venv`.
 
-Before getting started with your projects, we encourage you to carefully read the sections below and familiarise yourselves with the proposed tools.
-
-## Prerequisites
-Make sure you have the following software and tools installed:
-
-- **PyCharm**: We recommend using PyCharm as your IDE, since it offers a highly tailored experience for Python development. You can get a free student license [here](https://www.jetbrains.com/community/education/#students/).
-
-- **Pipenv**: Pipenv is used for dependency management. This tools enables users to easily create and manage virtual environments. To install Pipenv, use the following command:
-    ```bash
-    $ pip install --user pipenv
-    ```
-    For detailed installation instructions, [click here](https://pipenv.pypa.io/en/latest/installation.html).
-
-- **Git LFS**: Instead of committing large files to your repository, you should store and manage them using Git LFS. For installation information, [click here](https://github.com/git-lfs/git-lfs?utm_source=gitlfs_site&utm_medium=installation_link&utm_campaign=gitlfs#installing).
-
-## Getting Started
-### Setting up your own repository
-1. Fork this repository.
-2. Clone your fork locally.
-3. Configure a remote pointing to the upstream repository to sync changes between your fork and the original repository.
-   ```bash
-   git remote add upstream https://github.com/ivopascal/Applied-ML-Template
-   ```
-   **Don't skip this step.** We might update the original repository, so you should be able to easily pull our changes.
-   
-   To update your forked repo follow these steps:
-   1. `git fetch upstream`
-   2. `git rebase upstream/main`
-   3. `git push origin main`
-      
-      Sometimes you may need to use `git push --force origin main`. Only use this flag the first time you push after you rebased, and be careful as you might overwrite your teammates' changes.
-### Git LFS
-1. Set it up for your user account (only once, not each time you want to use it).
-    ```bash
-    git lfs install
-    ```
-2. Select the files that Git LFS should manage. To track all files of a certain type, you can use a wildcard as in the command below.
-    ```bash
-   git lfs track "*.psd"
-    ```
-3. Add _.gitattributes_ to the staging area.
-    ```bash
-    git add .gitattributes
-    ```
-That's all, you can commit and push as always. The tracked files will be automatically stored with Git LFS.
-
-### Pipenv
-This tool is incredibly easy to use. Let's **install** our first package, which you will all need in your projects.
-
+In order to install the required dependencies and set up the virtual environment, run:
 ```bash
-pipenv install pre-commit
+uv sync
 ```
 
-After running this command, you will notice that two files were created, namely, _Pipfile_ and _Pipfile.lock_. _Pipfile_ is the configuration file that specifies all the dependencies in your virtual environment.
+# Deploying the model
+Our final model is yet in its training phase, as we are running a wide search space and following a two-phase training (as specified in our proposal) to obtain the best performance possible.
 
-To **uninstall** a package, you can run the command:
+The current weights come from the checkpoint that has gotten the best performance so far. Please note that it does not represent the final expected performance in terms of overfit, accuracy, and inference times (as we have not yet completed the training nor the quantization). The current implementation should be taken as a demonstration of how our API and repo structure is managed.
+
+To deploy the model use the following command:
 ```bash
-pipenv uninstall <package-name>
+uv run uvicorn main:app
 ```
 
-To **activate** the virtual environment, run `pipenv shell`. You can now use the environment as you wish. To **deactivate** the environment run the command `exit`.
+It will download the latest weights from our Hugging Face repo, and will start the API (default port: 8000). The API documentation, once the API is running, can be found at http://localhost:8000/docs.
 
-If you **already have access to a Pipfile**, you can install the dependencies using `pipenv install`.
+# Utilities
+Should model training and performance be assessed, use the following helper scripts to check our implementation.
+## Generating the dataset
+The original dataset comes from Kaggle: [asl-alphabet](https://www.kaggle.com/datasets/grassknoted/asl-alphabet/data). However, this dataset contains several issues that we had to address via the usage of the scripts, which can be found at `scripts/dataset`.
 
-For a comprehensive list of commands, consult the [official documentation](https://pipenv.pypa.io/en/latest/cli.html).
+Before generating the dataset, configure Kaggle credentials. The simplest option is:
 
-### Unit testing
-You are expected to test your code using unit testing, which is a technique where small individual components of your code are tested in isolation.
-
-An **example** is given in _tests/test_main.py_, which uses the standard _unittest_ Python module to test whether the function _hello_world_ from _main.py_ works as expected.
-
-To run all the tests developed using _unittest_, simply use:
 ```bash
-python -m unittest discover tests
-```
-If you wish to see additional details, run it in verbose mode:
-```bash
-python -m unittest discover -v tests
+uv run kaggle auth login
 ```
 
-### Pre-commit
-Another good coding practice is using pre-commit hooks. This is used to inspect the code before committing to ensure it matches your standards.
+Alternatively, generate a Kaggle API token and follow Kaggle's instructions for storing it locally.
 
-In this course, we will be using two hooks (already configured in _.pre-commit-config.yaml_):
-- Unit testing
-- Flake8 (checks your code for errors, styling issues and complexity)
+The complete dataset curation pipeline is encapsulated in `scripts/dataset/craft_dataset.py`. It will follow this pipeline: download from Kaggle → decompress/rename → remove duplicates → crop blue frames → split. It can be executed with (it will take some time):
 
-Since we have already configured the hooks, all you need to do is run:
 ```bash
-pre-commit install
-```
-Now `pre-commit` will automatically run whenever you want to commit something to the repository.
-
-## Get Coding
-You are now ready to start working on your projects.
-
-We recommend following the same folder structure as in the original repository. This will make it easier for you to have cleaner and consistent code, and easier for us to follow your progress and help you.
-
-Your repository should look something like this:
-```bash
-├───data  # Stores .csv
-├───models  # Stores .pkl
-├───notebooks  # Contains experimental .ipynbs
-├───project_name
-│   ├───data  # For data processing, not storing .csv
-│   ├───features
-│   └───models  # For model creation, not storing .pkl
-├───reports
-├───tests
-│   ├───data
-│   ├───features
-│   └───models
-├───.gitignore
-├───.pre-commit-config.yaml
-├───main.py
-├───train_model.py
-├───Pipfile
-├───Pipfile.lock
-├───README.md
+uv run scripts/dataset/craft_dataset.py
 ```
 
-**Good luck and happy coding! 🚀**
+The final dataset splits will be stored to `data/curated`, with 80% for training and 20% for testing. The exact number of images per label can change after deduplication and cropping; the script prints the final counts.
+
+# Training the models
+In order to train the models, it is necessary that the dataset has been downloaded and processed. Refer to the previous section for guidance on dataset generation. Once that is done, you can train the baseline (KNN) model using:
+```bash
+uv run python -m asl_detector.models.knn
+```
+
+The complete hyperparameter search space can be searched for the mobilenet final model with:
+```bash
+uv run python -m asl_detector.models.train.train_mobilenet
+```

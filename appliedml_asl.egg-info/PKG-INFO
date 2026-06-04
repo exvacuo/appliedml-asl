@@ -1,9 +1,14 @@
 Metadata-Version: 2.4
 Name: appliedml-asl
 Version: 0.1.0
-Requires-Python: >=3.12
+Requires-Python: <3.12,>=3.11
+Requires-Dist: fastapi>=0.136.1
+Requires-Dist: imagededup>=0.3.3.post2
 Requires-Dist: kaggle>=2.1.2
-Requires-Dist: opencv-python>=4.13.0.92
+Requires-Dist: opencv-python<4.13
+Requires-Dist: optuna>=4.8.0
 Requires-Dist: pre-commit>=4.6.0
+Requires-Dist: pydantic>=2.13.4
 Requires-Dist: scikit-learn>=1.8.0
-Requires-Dist: tensorflow>=2.21.0
+Requires-Dist: tensorflow==2.16.2; sys_platform != "win32"
+Requires-Dist: tensorflow-intel==2.16.2; sys_platform == "win32"
