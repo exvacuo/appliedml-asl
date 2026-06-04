@@ -1,5 +1,5 @@
 import tensorflow as tf
-from asl_detector.constants import CHECKPOINT_DIR, MODEL_DIR, MODEL_WEIGHTS_PATH
+from asl_detector.constants import CHECKPOINT_DIR, MODEL_DIR, MODEL_WEIGHTS_PATH,SEED
 from asl_detector.data.dataloader import load_data
 from asl_detector.data.preprocess_data import preprocess_mobilenet, augment_dataset
 from asl_detector.models.mobilenetv2 import ASLMobilenetv2
@@ -57,6 +57,13 @@ def train_model():
 
     train, val, test = load_data(batch_size=hyperparams_phase_1["batch_size"], baseline=False)
     train_combined = train.concatenate(train.map(augment_dataset))
+    train_combined = (
+         train_combined
+         .unbatch()
+         .shuffle(buffer_size=1000, seed=SEED)
+         .batch(hyperparams_phase_1["batch_size"])
+         ) 
+
     train_combined = train_combined.map(preprocess_mobilenet)
 
     val_preprocessed = val.map(preprocess_mobilenet)
