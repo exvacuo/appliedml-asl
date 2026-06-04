@@ -21,13 +21,27 @@ uv run uvicorn main:app
 
 It will download the latest weights from our Hugging Face repo, and will start the API (default port: 8000). The API documentation, once the API is running, can be found at http://localhost:8000/docs.
 
-## Running with Docker
-Build the Docker image using: 
+## Docker setup
+Docker provides a self-contained way to run the API without installing Python or
+`uv` locally.
+
+### Prerequisites
+- Install [Docker Desktop](https://docs.docker.com/desktop/) or Docker Engine.
+- Ensure Docker is running:
+
+```bash
+docker --version
+```
+
+### Build and run the API
+From the repository root, build the image:
+
 ```bash
 docker build -t appliedml-asl .
 ```
 
-Run the API container:
+Then start the container:
+
 ```bash
 docker run --rm -p 8000:8000 appliedml-asl
 ```
