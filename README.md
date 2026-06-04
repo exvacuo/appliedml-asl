@@ -1,4 +1,4 @@
-# ASL MobileNetV2 predictor readme
+# ASL Alphabet MobileNetV2 Classifier
 Welcome to our repo! This file contains instructions for setting up dependencies and venv for the asl-detector project (Applied ML).
 
 # Setting up the virtual environment
