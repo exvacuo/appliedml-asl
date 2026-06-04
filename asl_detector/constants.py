@@ -8,8 +8,6 @@ ZIP_PATH = DATA_RAW_BASE_DIR / "asl-alphabet.zip"
 KAGGLE_DATASET = "grassknoted/asl-alphabet"
 
 AUGMENTED_COPIES_PER_IMAGE = 3
-MODEL_DIR = Path("models")
-WEIGHTS_PATH = MODEL_DIR / "mobilenetv2.weights.h5"
 
 
 DATA_DEDUPLICATED_DIR = Path("data/deduplicated/train")

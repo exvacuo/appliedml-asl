@@ -73,6 +73,9 @@ def train_model():
     ## Phase 1
     model = ASLMobilenetv2(num_classes=29, dropout_rate=hyperparams_phase_1["dropout_rate"])
     if done_path("phase1").exists() and checkpoint_path("phase1").exists():
+        model.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=hyperparams_phase_1["learning_rate"]),
+                    loss="sparse_categorical_crossentropy",
+                    metrics=["accuracy"])
         model.model.load_weights(checkpoint_path("phase1"))
         print(f"Loaded Phase 1 checkpoint from {checkpoint_path('phase1')}")
     else:
@@ -86,6 +89,9 @@ def train_model():
     ## Phase 2
     if done_path("phase2").exists() and checkpoint_path("phase2").exists():
         model.unfreeze_top_n_layers(hyperparams_phase_2["n_layers"])
+        model.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=hyperparams_phase_2["learning_rate"]),
+                    loss="sparse_categorical_crossentropy",
+                    metrics=["accuracy"])
         model.model.load_weights(checkpoint_path("phase2"))
         print(f"Loaded Phase 2 checkpoint from {checkpoint_path('phase2')}")
     else:
