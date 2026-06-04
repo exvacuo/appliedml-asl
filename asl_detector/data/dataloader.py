@@ -68,5 +68,3 @@ def load_data(
 
     return train_ds, remaining_ds, test_ds
 
-
-train_ds, val_ds, test_ds = load_data()
