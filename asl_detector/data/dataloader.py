@@ -52,14 +52,14 @@ def load_data(
 
     train_ds = create_dataset(
         data_dir=data_dir,
-        validation_split=0.2,
+        validation_split=0.1,
         subset="training",
         batch_size=batch_size,
     )
 
     remaining_ds = create_dataset(
         data_dir=data_dir,
-        validation_split=0.2,
+        validation_split=0.1,
         subset="validation",
         batch_size=batch_size,
     )
@@ -67,3 +67,6 @@ def load_data(
     test_ds = create_dataset(data_dir=test_data_dir, shuffle=False, batch_size=batch_size)
 
     return train_ds, remaining_ds, test_ds
+
+
+train_ds, val_ds, test_ds = load_data()
