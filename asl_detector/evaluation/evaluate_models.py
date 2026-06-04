@@ -7,21 +7,22 @@ def _history_data(history) -> dict:
 
 
 def save_accuracy_history(history, output_path: Path) -> list[dict]:
-    """Save training and validation accuracy per epoch as JSON."""
+    """Save training and validation accuracy and loss per epoch as JSON."""
     data = _history_data(history)
-    if "accuracy" not in data:
-        raise ValueError("Training history does not contain 'accuracy'.")
-    if "val_accuracy" not in data:
-        raise ValueError("Training history does not contain 'val_accuracy'.")
+    for key in ("accuracy", "val_accuracy", "loss", "val_loss"):
+        if key not in data:
+            raise ValueError(f"Training history does not contain '{key}'.")
 
     serializable = [
         {
             "epoch": epoch,
-            "train_accuracy": float(train_accuracy),
-            "val_accuracy": float(val_accuracy),
+            "train_accuracy": float(train_acc),
+            "val_accuracy": float(val_acc),
+            "train_loss": float(train_loss),
+            "val_loss": float(val_loss),
         }
-        for epoch, (train_accuracy, val_accuracy) in enumerate(
-            zip(data["accuracy"], data["val_accuracy"]),
+        for epoch, (train_acc, val_acc, train_loss, val_loss) in enumerate(
+            zip(data["accuracy"], data["val_accuracy"], data["loss"], data["val_loss"]),
             start=1,
         )
     ]
