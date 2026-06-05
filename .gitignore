@@ -7,8 +7,5 @@ venv/
 
 # Local datasets
 /data/
+/models/
 .venv/
-models/mobilenetv2.weights.h5
-models/*.weights.h5
-models/checkpoints/
-models/from_habrok/
