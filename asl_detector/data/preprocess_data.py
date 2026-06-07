@@ -22,17 +22,10 @@ def preprocess_knn(images, labels, size=64):
 
 # ── Extra augmentation functions ────────────────────────────────────────────
 
-
-def random_hue(images):
-    """Randomly shift image hue."""
-    return tf.image.random_hue(images, max_delta=0.25)
-
-
-def random_invert(images):
-    """Randomly invert about half of the images in a batch."""
-    random_values = tf.random.uniform((tf.shape(images)[0], 1, 1, 1))
-    inverted_images = 255.0 - images
-    return tf.where(random_values < 0.5, inverted_images, images)
+def random_gaussian_noise(images):
+    """Add Gaussian noise to images while preserving the pixel value range."""
+    noise = tf.random.normal(tf.shape(images), stddev=5.0, dtype=images.dtype)
+    return tf.clip_by_value(images + noise, 0.0, 255.0)
 
 
 # ── MobileNetV2 preprocessing ───────────────────────────────────────────────
@@ -62,8 +55,7 @@ def create_augmentation_layer():
       - Random zoom  10%
       - Random brightness  ±20%
       - Random contrast  20%
-      - Random hue shift
-      - Random color inversion
+      - Gaussian noise
     """
     tf.keras.utils.set_random_seed(SEED)
 
@@ -85,8 +77,7 @@ def create_augmentation_layer():
             ),
             tf.keras.layers.RandomBrightness(0.2, seed=SEED + 3),
             tf.keras.layers.RandomContrast(0.2, seed=SEED + 4),
-            tf.keras.layers.Lambda(random_hue),
-            tf.keras.layers.Lambda(random_invert),
+            tf.keras.layers.Lambda(random_gaussian_noise),
         ],
         name="augmentation",
     )
