@@ -7,6 +7,7 @@ from asl_detector.constants import (
     MODEL_DIR,
     MODEL_WEIGHTS_PATH,
     QUANTIZED_WEIGHTS_PATH,
+    SEED,
 )
 from asl_detector.data.dataloader import load_data
 from asl_detector.data.preprocess_data import preprocess_mobilenet
@@ -27,7 +28,7 @@ def calibration_data(num_samples: int = 200):
     _, val_ds, _ = load_data(baseline=False)
     calibration_ds = (
         val_ds.unbatch()
-        .shuffle(buffer_size=1000)
+        .shuffle(buffer_size=1000, seed=SEED)
         .take(num_samples)
         .map(lambda image, label: preprocess_mobilenet(image, label)[0])        
         .batch(1)
