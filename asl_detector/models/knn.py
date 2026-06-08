@@ -2,6 +2,7 @@ import numpy as np
 from asl_detector.constants import SEED
 from asl_detector.data.dataloader import load_data
 from asl_detector.features.extract_features import extract_features
+from asl_detector.evaluation.evaluate_models import measure_inference_time_knn
 from sklearn.model_selection import StratifiedKFold
 from sklearn.decomposition import PCA
 from sklearn.neighbors import KNeighborsClassifier
@@ -95,6 +96,10 @@ def main():
     print("Training final KNN model on full training set...")
     final_model, pca = train_final_model(X_train, y_train)
     X_test = pca.transform(X_test)
+
+    inference_time = measure_inference_time_knn(final_model, X_test)
+    print(f"KNN inference time on test set: {inference_time:.4f} ms")
+
     test_results = evaluate_on_test(final_model, X_test, y_test)
     print("KNN test results:", test_results)
 

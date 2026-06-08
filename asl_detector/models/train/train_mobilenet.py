@@ -1,9 +1,13 @@
 import tensorflow as tf
-from asl_detector.constants import CHECKPOINT_DIR, MODEL_DIR, MODEL_WEIGHTS_PATH
+from asl_detector.constants import CHECKPOINT_DIR, MODEL_DIR, MODEL_WEIGHTS_PATH,SEED
 from asl_detector.data.dataloader import load_data
 from asl_detector.data.preprocess_data import preprocess_mobilenet, augment_dataset
+from asl_detector.evaluation.evaluate_models import save_accuracy_history
 from asl_detector.models.mobilenetv2 import ASLMobilenetv2
 from asl_detector.models.train.tune import find_hyperparameters
+
+
+EVALUATION_DIR = MODEL_DIR / "evaluation"
 
 
 def setup_gpu():
@@ -51,12 +55,23 @@ def done_path(phase_name):
     return CHECKPOINT_DIR / f"{phase_name}.done"
 
 
+def save_phase_evaluation(history, phase_name):
+    save_accuracy_history(history, EVALUATION_DIR / f"{phase_name}_accuracy.json")
+
+
 def train_model():
     setup_gpu()
     hyperparams_phase_1, hyperparams_phase_2 = find_hyperparameters()
 
     train, val, test = load_data(batch_size=hyperparams_phase_1["batch_size"], baseline=False)
     train_combined = train.concatenate(train.map(augment_dataset))
+    train_combined = (
+         train_combined
+         .unbatch()
+         .shuffle(buffer_size=1000, seed=SEED)
+         .batch(hyperparams_phase_1["batch_size"])
+         ) 
+
     train_combined = train_combined.map(preprocess_mobilenet)
 
     val_preprocessed = val.map(preprocess_mobilenet)
@@ -66,19 +81,30 @@ def train_model():
     ## Phase 1
     model = ASLMobilenetv2(num_classes=29, dropout_rate=hyperparams_phase_1["dropout_rate"])
     if done_path("phase1").exists() and checkpoint_path("phase1").exists():
+        model.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=hyperparams_phase_1["learning_rate"]),
+                    loss="sparse_categorical_crossentropy",
+                    metrics=["accuracy"])
         model.model.load_weights(checkpoint_path("phase1"))
         print(f"Loaded Phase 1 checkpoint from {checkpoint_path('phase1')}")
     else:
         model.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=hyperparams_phase_1["learning_rate"]),
                     loss="sparse_categorical_crossentropy",
                     metrics=["accuracy"])
-        model.model.fit(train_combined, validation_data=val_preprocessed, epochs=30,
-                callbacks=training_callbacks("phase1"))
+        history = model.model.fit(
+            train_combined,
+            validation_data=val_preprocessed,
+            epochs=30,
+            callbacks=training_callbacks("phase1"),
+        )
+        save_phase_evaluation(history, "phase1")
         done_path("phase1").touch()
     
     ## Phase 2
     if done_path("phase2").exists() and checkpoint_path("phase2").exists():
         model.unfreeze_top_n_layers(hyperparams_phase_2["n_layers"])
+        model.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=hyperparams_phase_2["learning_rate"]),
+                    loss="sparse_categorical_crossentropy",
+                    metrics=["accuracy"])
         model.model.load_weights(checkpoint_path("phase2"))
         print(f"Loaded Phase 2 checkpoint from {checkpoint_path('phase2')}")
     else:
@@ -88,8 +114,13 @@ def train_model():
         model.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=hyperparams_phase_2["learning_rate"]),
                     loss="sparse_categorical_crossentropy",
                     metrics=["accuracy"])
-        model.model.fit(train_combined, validation_data=val_preprocessed, epochs=20,
-                callbacks=training_callbacks("phase2"))
+        history = model.model.fit(
+            train_combined,
+            validation_data=val_preprocessed,
+            epochs=20,
+            callbacks=training_callbacks("phase2"),
+        )
+        save_phase_evaluation(history, "phase2")
         done_path("phase2").touch()
 
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
