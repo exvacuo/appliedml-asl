@@ -33,7 +33,7 @@ def load_test_dataset(data_dir: Path = DATA_CURATED_TEST_DIR):
 
 
 def predict_dataset(model, dataset):
-    probabilities = model.predict(dataset, verbose=0)
+    probabilities = model.predict(dataset)
     y_pred = np.argmax(probabilities, axis=1).astype(np.int32)
     y_true = np.concatenate([labels.numpy() for _, labels in dataset], axis=0).astype(np.int32)
     return y_true, y_pred
@@ -68,6 +68,13 @@ def plot_confusion_matrix(confusion: dict, output_path: Path, title: str) -> Pat
     plt.close(fig)
     return output_path
 
+def measure_inference_time_knn(model, X_test, repeats: int = 3) -> float:
+    seconds = []
+    for _ in range(repeats):
+        start = time.perf_counter()
+        model.predict(X_test)
+        seconds.append(time.perf_counter() - start)
+    return float(np.mean(seconds))
 
 def measure_inference_time(model, dataset, repeats: int = 3) -> dict:
     seconds = []
